@@ -1,0 +1,29 @@
+{
+  "description": "Repository safety checks for shell and Cloudflare Code Mode calls.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/.codex/hooks/guard.mjs\"",
+            "commandWindows": "powershell -NoProfile -Command \"node (Join-Path (git rev-parse --show-toplevel) '.codex/hooks/guard.mjs')\"",
+            "statusMessage": "Checking the shell command against repository safety rules"
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__cloudflare__execute",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/.codex/hooks/guard.mjs\"",
+            "commandWindows": "powershell -NoProfile -Command \"node (Join-Path (git rev-parse --show-toplevel) '.codex/hooks/guard.mjs')\"",
+            "statusMessage": "Checking the Cloudflare call against repository safety rules"
+          }
+        ]
+      }
+    ]
+  }
+}

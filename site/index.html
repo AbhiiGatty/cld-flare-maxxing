@@ -1,0 +1,708 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>cld-flare-maxxing: let AI run your Cloudflare account for you</title>
+<meta name="description" content="cld-flare-maxxing is an AI agent that reads your whole Cloudflare account and flags what's misconfigured. It changes nothing until you say so.">
+<link rel="canonical" href="https://cld-flare-maxxing.abhiigatty.com/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://cld-flare-maxxing.abhiigatty.com/">
+<meta property="og:title" content="cld-flare-maxxing: let AI run your Cloudflare account for you">
+<meta property="og:description" content="An AI agent that reads your whole Cloudflare account and flags what's misconfigured. It changes nothing until you say so.">
+<meta property="og:image" content="https://cld-flare-maxxing.abhiigatty.com/assets/og-card.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="cld-flare-maxxing: let AI run your Cloudflare account for you">
+<meta name="twitter:description" content="An AI agent that reads your whole Cloudflare account and flags what's misconfigured. It changes nothing until you say so.">
+<meta name="twitter:image" content="https://cld-flare-maxxing.abhiigatty.com/assets/og-card.png">
+<link rel="icon" href="assets/mark.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- Fetch the background SDK's bytes at idle network priority while the page
+     paints, so the deferred evaluation at window 'load' hits the HTTP cache
+     instead of starting a ~46KB (gzipped) download from scratch. prefetch, not
+     preload: preload competes with critical resources and Lighthouse flags
+     preloaded-but-not-executed-soon resources. -->
+<link rel="prefetch" href="assets/unicorn-studio-sdk.js" as="script">
+<style>
+  :root {
+    --bg: #0d1117;
+    --text: #f0f3f7;
+    --text-dim: #9aa4b2;
+    --text-faint: #5b6472;
+    --border: #22272e;
+    --accent: #f6821f;
+    --accent-2: #38bdf8;
+    --font: "Google Sans", "Product Sans", "DM Sans", -apple-system,
+      BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  a { color: inherit; }
+  ::selection { background: var(--accent); color: #1a1a1a; }
+  :focus-visible { outline: 2px solid var(--accent-2); outline-offset: 3px; border-radius: 4px; }
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+
+  .paper {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(130% 100% at 50% 40%, transparent 55%, rgba(0,0,0,0.45) 100%),
+      radial-gradient(90% 60% at 50% 0%, rgba(246,130,31,0.07), transparent 60%),
+      var(--bg);
+  }
+  /* Animated Unicorn Studio scene, sitting between .paper (the static
+     fallback the page already renders under it, in case the scene fails to
+     load or the visitor has scripting/WebGL disabled) and .paper-grain (so
+     the grain texture still reads as one cohesive surface on top of the
+     motion). Recolored orange via the same sepia+hue-rotate technique
+     verified in the dashboard sandbox - the scene's own palette is blue/
+     violet, baked into the remote project, not something it exposes as a
+     prop. `inset: 0` on a fixed element is exactly viewport-sized and
+     re-flows on resize with no JS needed; the SDK reads the container's
+     actual rendered box itself. */
+  .unicorn-bg {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+    opacity: 0;
+    filter: sepia(1) saturate(3) hue-rotate(345deg) brightness(0.85);
+    transition: opacity 700ms ease;
+  }
+  /* .on is added by the loader script the moment the scene is actually
+     rendering, so the halo fades in smoothly instead of popping in late. */
+  .unicorn-bg.on { opacity: 0.62; }
+  @media (prefers-reduced-motion: reduce) {
+    .unicorn-bg { display: none; }
+  }
+  .paper-grain {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0.10;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* AG corner mark, top-left, links to the author's site */
+  .ag-corner {
+    position: fixed; top: 18px; left: 20px; z-index: 4; display: inline-flex;
+    color: #fff; opacity: 0.85; transition: opacity 150ms ease;
+  }
+  .ag-corner:hover { opacity: 1; }
+  .ag-corner svg { height: 22px; width: auto; display: block; }
+
+  main {
+    position: relative; z-index: 2;
+    min-height: 100dvh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center;
+    padding: 72px 24px 88px;
+    gap: clamp(18px, 3vh, 28px);
+    overflow: hidden;
+  }
+  /* Legibility vignette: sits inside main's own stacking context, painting
+     behind the hero text. Keeps the text readable without a hard-edged card.
+     Darkened further (was 0.62/0.4/0.12) once the animated background behind
+     it started reading noticeably brighter/more saturated than the old flat
+     .paper gradient this was originally tuned against. */
+  main::before {
+    content: ''; position: absolute; inset: -10% -6%; z-index: -1;
+    background: radial-gradient(58% 62% at 50% 48%, rgba(13,17,23,0.8) 0%, rgba(13,17,23,0.58) 45%, rgba(13,17,23,0.22) 72%, transparent 88%);
+    pointer-events: none;
+  }
+
+  .brand {
+    display: inline-flex; align-items: center; gap: 11px;
+    animation: rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.03s both;
+  }
+  .brand .mark { width: clamp(38px, 4.6vh, 46px); height: clamp(38px, 4.6vh, 46px); }
+  .wordmark {
+    font-family: var(--mono); font-size: clamp(1.05rem, 3.2vw, 1.35rem); font-weight: 700;
+    letter-spacing: -0.01em; color: #fff;
+    text-shadow: 0 0 20px rgba(13,17,23,0.9), 0 1px 8px rgba(13,17,23,0.85);
+  }
+  .gradtext {
+    background: linear-gradient(135deg, var(--accent), #fbb040);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+
+  h1 {
+    margin: 0; max-width: 16ch;
+    font-size: clamp(2.15rem, 6vw, 4rem);
+    font-weight: 700; letter-spacing: -0.03em; line-height: 1.05;
+    text-shadow: 0 0 26px rgba(13,17,23,0.95), 0 0 12px rgba(13,17,23,0.9), 0 2px 4px rgba(13,17,23,0.85);
+  }
+  h1 .word { display: inline-block; animation: wordIn 0.62s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+  /* "Cloudflare": the glyphs themselves carry the glass look (a bright
+     gradient fill plus a soft outer glow), no separate panel behind them,
+     with a bright shine sweeping across continuously.
+     Two rendering traps found by testing against a plain swatch of the same
+     gradient (which rendered correctly on its own, proving the gradient
+     itself was never the problem):
+     - backdrop-filter combined with background-clip: text washed the fill
+       out to muddy grey, so the frosted look comes from filter: drop-shadow
+       instead - it reads the element's own rendered pixels forward rather
+       than sampling the page behind it, so it doesn't wash anything.
+     - text-shadow combined with background-clip: text + color: transparent
+       had the same washing effect on its own, even with backdrop-filter
+       removed. filter: drop-shadow gives the same "lift off the dark page"
+       depth without that bug. */
+  h1 .hl-accent {
+    display: inline-block;
+    animation: wordIn 0.62s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  h1 .hl-accent .txt {
+    font-weight: 800;
+    -webkit-text-stroke: 0.6px rgba(255,224,178,0.7);
+    /* text-shadow is inherited (it's an inherited CSS property) from the
+       h1 rule above, which uses it as a dark halo for legibility over the
+       paper background. That inherited shadow hits this exact same washing
+       bug once it lands on background-clip: text, so it must be explicitly
+       cleared here - filter: drop-shadow below gives this word its own
+       "lift off the page" depth instead. */
+    text-shadow: none;
+    filter: drop-shadow(0 0 10px rgba(246,130,31,0.45)) drop-shadow(0 2px 10px rgba(0,0,0,0.35));
+    /* Base is the same solid orange as the primary button (--accent), so the
+       word reads as "the same orange, made of glass" rather than a pale
+       white chip. The streak layer fades via rgba(255,255,255,0), not the
+       bare `transparent` keyword - that keyword is black-transparent, so
+       fading white into it (then back) greys out the whole transition band
+       once composited over the base layer, which read as muddy grey/brown
+       across most of the word at any given animation frame. */
+    background-image:
+      linear-gradient(100deg, rgba(255,255,255,0) 32%, rgba(255,224,178,0.95) 49%, rgba(255,255,255,0.9) 53%, rgba(255,255,255,0) 70%),
+      linear-gradient(160deg, #ffb454 0%, #f6821f 55%, #d96b12 100%);
+    background-size: 300% 100%, 100% 100%;
+    background-position: 220% 0, 0 0;
+    background-repeat: no-repeat, no-repeat;
+    -webkit-background-clip: text; background-clip: text;
+    color: transparent; -webkit-text-fill-color: transparent;
+    animation: shine 2.6s linear infinite;
+  }
+  @keyframes wordIn { from { opacity: 0; transform: translateY(0.5em); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes shine {
+    0%   { background-position: 220% 0, 0 0; }
+    100% { background-position: -120% 0, 0 0; }
+  }
+
+  .sub {
+    margin: 0; max-width: 40ch;
+    font-size: clamp(1.05rem, 2vw, 1.22rem);
+    /* Pure white and medium weight keep the copy readable as the animated
+       background moves through lighter colors behind it. */
+    font-weight: 500; line-height: 1.55; color: #fff;
+    text-shadow: 0 0 22px rgba(13,17,23,1), 0 0 10px rgba(13,17,23,0.95), 0 1px 4px rgba(13,17,23,0.9);
+    animation: rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.55s both;
+  }
+
+  .cta-row {
+    display: flex; align-items: center; gap: 20px; flex-wrap: wrap; justify-content: center;
+    margin-top: 8px;
+    animation: rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.68s both;
+  }
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 14px 28px; border: 0; border-radius: 980px;
+    background: var(--accent); color: #1a1300;
+    font-family: inherit; font-size: 15.5px; font-weight: 600; text-decoration: none;
+    box-shadow: 0 6px 22px rgba(246,130,31,0.28);
+    transition: transform 150ms ease, filter 150ms ease;
+    cursor: pointer;
+  }
+  .btn-primary:hover { filter: brightness(1.08); transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+  .link-secondary {
+    display: inline-flex; align-items: center; padding: 10px 6px;
+    font-size: 15.5px; font-weight: 700; text-decoration: none; color: #fff;
+    text-shadow: 0 0 16px rgba(13,17,23,0.9), 0 1px 6px rgba(13,17,23,0.85);
+    border-bottom: 1px solid transparent; transition: border-color 150ms ease, color 150ms ease;
+    cursor: pointer;
+  }
+  .link-secondary:hover { color: var(--accent); border-color: var(--accent); }
+
+  .site-footer {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 3;
+    display: flex; align-items: center; justify-content: space-between; gap: 14px;
+    padding: 10px 20px; font-size: 12.5px; color: var(--text-faint);
+    pointer-events: none;
+  }
+  .site-footer .credit { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; pointer-events: auto; }
+  .site-footer .credit a { color: var(--text-dim); text-decoration: none; }
+  .site-footer .credit a:hover { color: var(--accent); }
+  .socials { display: inline-flex; align-items: center; gap: 6px; pointer-events: auto; }
+  .socials a {
+    color: var(--text-faint); display: inline-flex; padding: 8px; border-radius: 8px;
+    transition: color 150ms ease, background 150ms ease;
+  }
+  .socials a:hover { color: var(--accent); background: rgba(246,130,31,0.10); }
+  .socials svg { width: 18px; height: 18px; display: block; }
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Terminal popup: a frosted-glass panel floating over the animated
+     background - the page itself (halo, grain, hero) stays visible through
+     it, blurred. The tint layers are deliberately fairly opaque (0.66-0.74)
+     so the transcript stays readable even where the scene behind is bright,
+     and so browsers without backdrop-filter still get a legible dark panel
+     instead of see-through soup. */
+  .term-overlay {
+    position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center;
+    padding: 20px; background: rgba(5,7,10,0.45); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    animation: fade 180ms ease both;
+  }
+  .term-overlay[hidden] { display: none; }
+  /* Fixed height (not max-height): the window opens at its final size and the
+     transcript types inside it, scrolling within .term-body - no window
+     growing line by line as content appears. */
+  .term-window {
+    width: min(680px, 100%); height: min(720px, 86vh); display: flex; flex-direction: column;
+    background: linear-gradient(180deg, rgba(24,29,39,0.74), rgba(13,17,23,0.66));
+    backdrop-filter: blur(28px) saturate(1.5); -webkit-backdrop-filter: blur(28px) saturate(1.5);
+    border: 1px solid rgba(255,255,255,0.10); border-radius: 18px; overflow: hidden;
+    /* Inset top highlight = the classic glass "lit edge"; the faint orange
+       outer glow ties the panel to the halo behind it. */
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.08),
+      0 30px 90px rgba(0,0,0,0.6),
+      0 0 90px rgba(246,130,31,0.10);
+    animation: termIn 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  @keyframes termIn {
+    from { opacity: 0; transform: translateY(14px) scale(0.985); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .term-bar {
+    display: flex; align-items: center; gap: 7px; padding: 12px 16px;
+    background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.07);
+  }
+  .term-bar .dot { width: 11px; height: 11px; border-radius: 50%; }
+  /* Glowing traffic-lights (a real terminal's dots pulled off a matching
+     box-shadow, like the private reference terminal widget) instead of
+     flat circles. */
+  .term-bar .r { background: #ff5f57; box-shadow: 0 0 6px rgba(255,95,87,0.55); }
+  .term-bar .y { background: #febc2e; box-shadow: 0 0 6px rgba(254,188,46,0.5); }
+  .term-bar .g { background: #28c840; box-shadow: 0 0 6px rgba(40,200,64,0.5); }
+  .term-bar .term-title { margin-left: 8px; font-family: var(--mono); font-size: 12px; color: var(--text-dim); }
+  .term-bar .term-close { margin-left: auto; background: none; border: 0; color: var(--text-faint); font-size: 15px; cursor: pointer; padding: 4px 8px; border-radius: 8px; }
+  .term-bar .term-close:hover { color: var(--text); background: rgba(255,255,255,0.08); }
+  .term-body {
+    flex: 1; margin: 0; padding: 18px 20px; overflow-y: auto; font-family: var(--mono);
+    font-size: 13px; line-height: 1.7; color: #cdd6e0; white-space: pre-wrap;
+    /* Scrollbar hidden (both engines) - the transcript auto-scrolls itself,
+       and a bar down the edge breaks the glass illusion. */
+    scrollbar-width: none;
+  }
+  .term-body::-webkit-scrollbar { display: none; }
+  .term-line { display: block; animation: fade 220ms ease both; }
+  .term-body .cmd { color: #f0f3f7; font-weight: 600; }
+  .term-body .prompt { color: #f0f3f7; font-weight: 600; }
+  .term-body .tool { color: var(--accent-2); }
+  .term-body .ok { color: #95de64; }
+  .term-body .warn { color: #ffc16b; }
+  .term-body .dim { color: #6b7480; }
+  .term-body .out { color: #a9b4c0; }
+  /* Shell-comment green (the classic editor-comment tint) for the intro line. */
+  .term-body .comment { color: #6a9955; }
+  /* Our cloud mascot (the SVG pixel grid built in the script below) beside
+     three stacked info lines - the same left-mark/right-content layout a
+     real Claude Code startup banner uses. */
+  .term-body .mascot-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 0.15em; }
+  .term-body .mascot-glyph { flex: none; padding-top: 2px; }
+  .term-body .mascot-lines { display: flex; flex-direction: column; gap: 2px; }
+  /* A bordered callout box with its label cut into the top border - same
+     pattern as the reference widget's labelled border, built from
+     two stacked .term-line's (box-top supplies the label + top/side edges,
+     box-bottom supplies the content + bottom/side edges + rounded corners)
+     since each line is still typed in independently by reveal(). */
+  .term-body .box-top {
+    position: relative; border: 1px solid rgba(246,130,31,0.35); border-bottom: 0;
+    border-top-left-radius: 10px; border-top-right-radius: 10px;
+    padding: 8px 12px 0; min-height: 6px;
+  }
+  .term-body .box-top .callout-label {
+    /* Solid dark chip close to the glass panel's effective tint - it has to
+       mask the border line it sits on, so it can't be translucent itself. */
+    position: absolute; top: -7px; left: 12px; background: #131820; padding: 0 6px;
+    border-radius: 4px;
+    font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent);
+  }
+  .term-body .box-bottom {
+    color: #9aa4b2; border: 1px solid rgba(246,130,31,0.35); border-top: 0;
+    border-bottom-left-radius: 10px; border-bottom-right-radius: 10px;
+    padding: 2px 12px 10px;
+  }
+  /* Real, clickable links inside the transcript (repo URL, docs) - a distinct
+     blue at rest, same as a real terminal's hyperlinks, brightening to the
+     brand orange on hover like every other link on the page. */
+  .term-body a { color: var(--accent-2); text-decoration: underline; text-underline-offset: 2px; }
+  .term-body a:hover { color: var(--accent); }
+  /* Softer blink (fades to a dim 15%, not fully off) on a gentler easing -
+     matches the reference terminal cursor rather than a hard on/off. */
+  .term-body .cursor { color: var(--accent); animation: termblink 1.4s cubic-bezier(.4,0,.2,1) infinite; }
+  @keyframes termblink { 50% { opacity: 0.15; } }
+  @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+
+  /* The live "y/n" reply: styled to look like plain typed shell text (same
+     font/weight/color as a .prompt line), not like a web form field. */
+  .term-input {
+    font: inherit; color: inherit; background: transparent; border: 0; outline: 0;
+    padding: 0; margin: 0; width: 14ch; caret-color: var(--accent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .brand, h1 .word, h1 .hl-accent, .sub, .cta-row, .term-overlay, .term-line { animation: none; }
+    h1 .hl-accent .txt { animation: none; background-position: -30% 0, 0 0; }
+  }
+
+  @media (max-width: 560px) {
+    main { padding: 66px 20px 96px; gap: clamp(16px, 3vh, 24px); }
+    .brand { flex-direction: column; gap: 8px; }   /* icon on top of the text */
+    .cta-row { flex-direction: column; gap: 12px; }
+    .btn-primary, .link-secondary { width: 100%; max-width: 320px; justify-content: center; }
+    .site-footer { flex-direction: column; gap: 6px; padding: 8px 14px 12px; text-align: center; }
+    .site-footer .credit { justify-content: center; }
+    .credit .credit-long { display: none; }
+    .ag-corner { top: 14px; left: 14px; }
+    .term-body { font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="paper" aria-hidden="true"></div>
+<div class="unicorn-bg" id="unicornBg" aria-hidden="true"></div>
+<div class="paper-grain" aria-hidden="true"></div>
+
+<a class="ag-corner" href="https://abhiigatty.com" target="_blank" rel="noopener" aria-label="Abhii Gatty">
+  <svg viewBox="0 0 491 391" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M102.5 293.5L67.5 379H10L171 0H174.5L335.5 379H268.5L235 293.5L215.5 243H215.302L170 128.5L123 243.5H123.292L102.5 293.5Z" fill="currentColor"/>
+    <path d="M480.325 341.5C470.325 350.833 452.825 359.5 427.825 367.5C403.158 375.167 380.491 379 359.825 379C356.947 379 354.095 378.957 351.27 378.87L325.107 317.27C336.497 319.757 348.57 321 361.325 321C372.991 321 384.158 320 394.825 318C405.491 315.667 414.491 312.5 421.825 308.5V248H353.325V192H480.325V341.5Z" fill="currentColor"/>
+    <path d="M261.325 29.5C244.568 38.3714 229.793 49.7495 217 63.6343L217.325 63.5L244.082 126.5C249.455 116.617 256.203 107.783 264.325 100C288.325 77 321.158 65.5 362.825 65.5C375.158 65.5 389.491 67.6667 405.825 72C422.491 76.3334 435.825 81.5 445.825 87.5L464.825 33.5C450.491 25.5 433.825 19.1667 414.825 14.5C396.158 9.5 376.325 7 355.325 7C321.325 7 289.991 14.5 261.325 29.5Z" fill="currentColor"/>
+  </svg>
+</a>
+
+<main>
+  <div class="brand">
+    <svg class="mark" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="cld-flare-maxxing">
+      <defs>
+        <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#f6821f"/><stop offset="100%" stop-color="#fbb040"/>
+        </linearGradient>
+      </defs>
+      <g fill="url(#g)">
+        <ellipse cx="32" cy="42" rx="22" ry="11"/>
+        <circle cx="20" cy="32" r="11"/>
+        <circle cx="34" cy="24" r="13"/>
+        <circle cx="46" cy="34" r="10"/>
+      </g>
+      <path d="M39 28 l2.2 5.3 5.3 2.2 -5.3 2.2 -2.2 5.3 -2.2 -5.3 -5.3 -2.2 5.3 -2.2z" fill="#0d1117"/>
+    </svg>
+    <span class="wordmark">cld-flare-<span class="gradtext">maxxing</span></span>
+  </div>
+
+  <h1 aria-label="Let AI run your Cloudflare">
+    <span class="word" style="animation-delay:0.10s">Let</span>
+    <span class="word" style="animation-delay:0.16s">AI</span>
+    <span class="word" style="animation-delay:0.22s">run</span>
+    <span class="word" style="animation-delay:0.28s">your</span>
+    <span class="word hl-accent" style="animation-delay:0.34s"><span class="txt">Cloudflare</span></span>
+  </h1>
+
+  <p class="sub">An AI agent that reads your whole account and flags what's misconfigured. It changes nothing until you say so.</p>
+
+  <div class="cta-row">
+    <button class="btn-primary" id="getStarted" type="button">Get started</button>
+    <a class="link-secondary" href="https://github.com/AbhiiGatty/cld-flare-maxxing#readme">Read the docs</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <span class="credit">
+    Made with love by
+    <a href="https://abhiigatty.com" target="_blank" rel="noopener">AbhiiGatty</a>
+    <span class="sep" aria-hidden="true">·</span>
+    <a href="https://github.com/AbhiiGatty/cld-flare-maxxing/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>
+  </span>
+
+  <nav class="socials" aria-label="Social links">
+    <a href="https://github.com/AbhiiGatty" target="_blank" rel="noopener" aria-label="GitHub">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.09.68-.22.68-.49 0-.24-.01-.87-.01-1.71-2.78.62-3.37-1.37-3.37-1.37-.46-1.18-1.11-1.5-1.11-1.5-.9-.63.07-.62.07-.62 1 .07 1.53 1.06 1.53 1.06.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.14-4.56-5.05 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.28 2.75 1.05a9.36 9.36 0 0 1 5 0c1.91-1.33 2.75-1.05 2.75-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.92-2.34 4.78-4.57 5.04.36.32.68.94.68 1.9 0 1.37-.01 2.48-.01 2.82 0 .27.18.59.69.49A10.26 10.26 0 0 0 22 12.25C22 6.58 17.52 2 12 2z"/></svg>
+    </a>
+    <a href="https://twitter.com/abhiigatty_" target="_blank" rel="noopener" aria-label="X (Twitter)">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.66l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231 5.45-6.231Zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77Z"/></svg>
+    </a>
+    <a href="https://www.linkedin.com/in/abhiigatty/" target="_blank" rel="noopener" aria-label="LinkedIn">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4.98 3.5c0 1.38-1.11 2.5-2.48 2.5S.02 4.88.02 3.5 1.14 1 2.5 1s2.48 1.12 2.48 2.5ZM.24 8.02h4.5V23H.24V8.02Zm8.1 0h4.31v2.05h.06c.6-1.14 2.07-2.34 4.26-2.34 4.56 0 5.4 3 5.4 6.9V23h-4.5v-6.53c0-1.56-.03-3.56-2.17-3.56-2.17 0-2.5 1.7-2.5 3.45V23H8.34V8.02Z"/></svg>
+    </a>
+    <a href="https://instagram.com/abhiigatty" target="_blank" rel="noopener" aria-label="Instagram">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3.2" y="3.2" width="17.6" height="17.6" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="16.8" cy="7.2" r="1.1" fill="currentColor" stroke="none"/></svg>
+    </a>
+    <a href="mailto:hello@abhiigatty.com" aria-label="Email">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M4 7l8 5.5L20 7"/></svg>
+    </a>
+  </nav>
+</footer>
+
+<div class="term-overlay" id="termOverlay" hidden>
+  <div class="term-window" role="dialog" aria-modal="true" aria-label="How cld-flare-maxxing works">
+    <div class="term-bar">
+      <span class="dot r" aria-hidden="true"></span><span class="dot y" aria-hidden="true"></span><span class="dot g" aria-hidden="true"></span>
+      <span class="term-title">cld-flare-maxxing</span>
+      <button class="term-close" id="termClose" aria-label="Close">✕</button>
+    </div>
+    <pre class="term-body" id="termBody"></pre>
+  </div>
+</div>
+
+<script type="application/json" id="unicornSceneData">{"history":[{"breakpoints":[],"visible":true,"aspectRatio":1,"userDownsample":1,"layerType":"effect","type":"gradient","usesPingPong":false,"speed":0.25,"trackMouse":0,"mouseMomentum":0,"texture":false,"animating":false,"isMask":0,"compiledFragmentShaders":["#version 300 es\nprecision highp float;in vec2 vTextureCoord;uniform vec2 uMousePos;vec3 getColor(int index) { switch(index) { case 0: return vec3(0, 0, 0); case 1: return vec3(0, 0, 0); case 2: return vec3(0, 0, 0); case 3: return vec3(0, 0, 0); case 4: return vec3(0, 0, 0); case 5: return vec3(0, 0, 0); case 6: return vec3(0, 0, 0); case 7: return vec3(0, 0, 0); case 8: return vec3(0, 0, 0); case 9: return vec3(0, 0, 0); case 10: return vec3(0, 0, 0); case 11: return vec3(0, 0, 0); case 12: return vec3(0, 0, 0); case 13: return vec3(0, 0, 0); case 14: return vec3(0, 0, 0); case 15: return vec3(0, 0, 0); default: return vec3(0.0); } }const float PI = 3.14159265;vec2 rotate(vec2 coord, float angle) { float s = sin(angle); float c = cos(angle); return vec2( coord.x * c - coord.y * s, coord.x * s + coord.y * c ); }out vec4 fragColor;vec3 getColor(vec2 uv) {return vec3(0, 0, 0); }void main() {vec2 uv = vTextureCoord; vec2 pos = vec2(0.5, 0.5) + mix(vec2(0), (uMousePos-0.5), 0.0000); uv -= pos; uv /= (0.5000*2.); uv = rotate(uv, (0.0000 - 0.5) * 2. * PI); vec4 color = vec4(getColor(uv), 1.); fragColor = color; }"],"compiledVertexShaders":["#version 300 es\nprecision mediump float;in vec3 aVertexPosition; in vec2 aTextureCoord;uniform mat4 uMVMatrix; uniform mat4 uPMatrix;out vec2 vTextureCoord; out vec3 vVertexPosition;void main() { gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0); vTextureCoord = aTextureCoord; }"],"data":{"downSample":0.5,"depth":false,"uniforms":{},"isBackground":true},"id":"effect"},{"breakpoints":[],"visible":true,"aspectRatio":1,"userDownsample":1,"layerType":"effect","type":"beam","usesPingPong":false,"speed":0.25,"trackMouse":0,"mouseMomentum":0,"texture":false,"animating":true,"isMask":0,"compiledFragmentShaders":["#version 300 es\nprecision highp float; precision highp int;in vec2 vTextureCoord;uniform sampler2D uTexture;uniform float uTime;uniform vec2 uMousePos; uniform vec2 uResolution; vec3 blend (int blendMode, vec3 src, vec3 dst) { return src + dst; }uvec2 pcg2d(uvec2 v) { v = v * 1664525u + 1013904223u; v.x += v.y * v.y * 1664525u + 1013904223u; v.y += v.x * v.x * 1664525u + 1013904223u; v ^= v >> 16; v.x += v.y * v.y * 1664525u + 1013904223u; v.y += v.x * v.x * 1664525u + 1013904223u; return v; }float randFibo(vec2 p) { uvec2 v = floatBitsToUint(p); v = pcg2d(v); uint r = v.x ^ v.y; return float(r) / float(0xffffffffu); }vec3 Tonemap_tanh(vec3 x) { x = clamp(x, -40.0, 40.0); return (exp(x) - exp(-x)) / (exp(x) + exp(-x)); }out vec4 fragColor;const float PI = 3.14159265359; const float TWO_PI = 2.0 * PI;float luma(vec3 color) { return dot(color, vec3(0.299, 0.587, 0.114)); }mat2 rot(float a) { return mat2(cos(a),-sin(a),sin(a),cos(a)); }vec3 drawExpandingRings(vec2 uv, vec2 center, float scale, float angle) { uv.x *= uResolution.x/uResolution.y; center.x *= uResolution.x/uResolution.y; vec2 skew = vec2(0.5000, 1.-0.5000) * 2.; uv = uv * rot(0.0000 * TWO_PI) * skew; center = center * rot(0.0000 * TWO_PI) * skew; float modulo = fract(uTime * 0.02 + 0.5000); float ringRadius = scale * 0.5 * modulo; float distFromCenter = length(uv - center); float ringDist = abs(distFromCenter - ringRadius); float lineRadius = 0.5000 * modulo; float brightness = lineRadius / (1.0 - smoothstep(0.2, 0.002, ringDist + 0.02));brightness = brightness * max(0., 1.-modulo);vec3 ringColor = brightness * pow(1.-ringDist, 3.) * vec3(0.9137254901960784, 0.47058823529411764, 1); return ringColor; }vec3 getBeam(vec2 uv) { vec2 pos = vec2(0.5, 0.5) + mix(vec2(0), (uMousePos-0.5), 0.0000); return drawExpandingRings(uv, pos, 0.3200, 0.0000); }void main() { vec2 uv = vTextureCoord; vec4 bg = texture(uTexture, uv);vec3 beam = getBeam(uv); float dither = (randFibo(gl_FragCoord.xy) - 0.5) / 255.0;vec3 blended = blend(1, Tonemap_tanh(beam), bg.rgb); vec3 result = mix(bg.rgb, blended, 1.0000); result += dither;vec4 color = vec4(result, max(bg.a, luma(beam))); fragColor = color;}"],"compiledVertexShaders":["#version 300 es\nprecision mediump float;in vec3 aVertexPosition; in vec2 aTextureCoord;uniform mat4 uMVMatrix; uniform mat4 uPMatrix; uniform mat4 uTextureMatrix;out vec2 vTextureCoord; out vec3 vVertexPosition;void main() { gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0); vTextureCoord = (uTextureMatrix * vec4(aTextureCoord, 0.0, 1.0)).xy; }"],"data":{"depth":false,"uniforms":{},"isBackground":false},"id":"effect1"},{"breakpoints":[],"visible":true,"aspectRatio":1,"userDownsample":1,"layerType":"effect","type":"beam","usesPingPong":false,"speed":0.13,"trackMouse":0,"mouseMomentum":0,"texture":false,"animating":false,"isMask":0,"compiledFragmentShaders":["#version 300 es\nprecision highp float; precision highp int;in vec2 vTextureCoord;uniform sampler2D uTexture;uniform float uTime;uniform vec2 uMousePos; uniform vec2 uResolution; vec3 blend (int blendMode, vec3 src, vec3 dst) { return 2.0 * src + dst - 1.0; }uvec2 pcg2d(uvec2 v) { v = v * 1664525u + 1013904223u; v.x += v.y * v.y * 1664525u + 1013904223u; v.y += v.x * v.x * 1664525u + 1013904223u; v ^= v >> 16; v.x += v.y * v.y * 1664525u + 1013904223u; v.y += v.x * v.x * 1664525u + 1013904223u; return v; }float randFibo(vec2 p) { uvec2 v = floatBitsToUint(p); v = pcg2d(v); uint r = v.x ^ v.y; return float(r) / float(0xffffffffu); }vec3 Tonemap_tanh(vec3 x) { x = clamp(x, -40.0, 40.0); return (exp(x) - exp(-x)) / (exp(x) + exp(-x)); }out vec4 fragColor;const float PI = 3.14159265359; const float TWO_PI = 2.0 * PI;float luma(vec3 color) { return dot(color, vec3(0.299, 0.587, 0.114)); }mat2 rot(float a) { return mat2(cos(a),-sin(a),sin(a),cos(a)); }vec3 drawExpandingRings(vec2 uv, vec2 center, float scale, float angle) { uv.x *= uResolution.x/uResolution.y; center.x *= uResolution.x/uResolution.y; vec2 skew = vec2(0.5000, 1.-0.5000) * 2.; uv = uv * rot(0.0000 * TWO_PI) * skew; center = center * rot(0.0000 * TWO_PI) * skew; float modulo = fract(uTime * 0.02 + 0.5000); float ringRadius = scale * 0.5 * modulo; float distFromCenter = length(uv - center); float ringDist = abs(distFromCenter - ringRadius); float lineRadius = 1.0000 * modulo; float brightness = lineRadius / (1.0 - smoothstep(0.2, 0.002, ringDist + 0.02));brightness = brightness * max(0., 1.-modulo);vec3 ringColor = brightness * pow(1.-ringDist, 3.) * vec3(0.396078431372549, 0.4392156862745098, 0.9882352941176471); return ringColor; }vec3 getBeam(vec2 uv) { vec2 pos = vec2(0.5, 0.5) + mix(vec2(0), (uMousePos-0.5), 0.0000); return drawExpandingRings(uv, pos, 0.7200, 0.0000); }void main() { vec2 uv = vTextureCoord; vec4 bg = texture(uTexture, uv);vec3 beam = getBeam(uv); float dither = (randFibo(gl_FragCoord.xy) - 0.5) / 255.0;vec3 blended = blend(15, Tonemap_tanh(beam), bg.rgb); vec3 result = mix(bg.rgb, blended, 1.0000); result += dither;vec4 color = vec4(result, max(bg.a, luma(beam))); fragColor = color;}"],"compiledVertexShaders":["#version 300 es\nprecision mediump float;in vec3 aVertexPosition; in vec2 aTextureCoord;uniform mat4 uMVMatrix; uniform mat4 uPMatrix; uniform mat4 uTextureMatrix;out vec2 vTextureCoord; out vec3 vVertexPosition;void main() { gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0); vTextureCoord = (uTextureMatrix * vec4(aTextureCoord, 0.0, 1.0)).xy; }"],"data":{"depth":false,"uniforms":{},"isBackground":false},"id":"effect2"},{"breakpoints":[],"visible":true,"aspectRatio":1,"userDownsample":1,"layerType":"effect","type":"fbm","usesPingPong":false,"speed":0.29,"trackMouse":0.03,"mouseMomentum":1,"texture":false,"animating":true,"isMask":0,"compiledFragmentShaders":["#version 300 es\nprecision highp float;in vec2 vTextureCoord;uniform sampler2D uTexture; uniform float uTime;uniform vec2 uMousePos; uniform vec2 uResolution;float ease (int easingFunc, float t) { return t; }vec3 hash33(vec3 p3) { p3 = fract(p3 * vec3(0.1031, 0.11369, 0.13787)); p3 += dot(p3, p3.yxz + 19.19); return -1.0 + 2.0 * fract(vec3( (p3.x + p3.y) * p3.z, (p3.x + p3.z) * p3.y, (p3.y + p3.z) * p3.x )); }float perlin_noise(vec3 p) { vec3 pi = floor(p); vec3 pf = p - pi;vec3 w = pf * pf * (3.0 - 2.0 * pf);float n000 = dot(pf - vec3(0.0, 0.0, 0.0), hash33(pi + vec3(0.0, 0.0, 0.0))); float n100 = dot(pf - vec3(1.0, 0.0, 0.0), hash33(pi + vec3(1.0, 0.0, 0.0))); float n010 = dot(pf - vec3(0.0, 1.0, 0.0), hash33(pi + vec3(0.0, 1.0, 0.0))); float n110 = dot(pf - vec3(1.0, 1.0, 0.0), hash33(pi + vec3(1.0, 1.0, 0.0))); float n001 = dot(pf - vec3(0.0, 0.0, 1.0), hash33(pi + vec3(0.0, 0.0, 1.0))); float n101 = dot(pf - vec3(1.0, 0.0, 1.0), hash33(pi + vec3(1.0, 0.0, 1.0))); float n011 = dot(pf - vec3(0.0, 1.0, 1.0), hash33(pi + vec3(0.0, 1.0, 1.0))); float n111 = dot(pf - vec3(1.0, 1.0, 1.0), hash33(pi + vec3(1.0, 1.0, 1.0)));float nx00 = mix(n000, n100, w.x); float nx01 = mix(n001, n101, w.x); float nx10 = mix(n010, n110, w.x); float nx11 = mix(n011, n111, w.x);float nxy0 = mix(nx00, nx10, w.y); float nxy1 = mix(nx01, nx11, w.y);float nxyz = mix(nxy0, nxy1, w.z);return nxyz; } const float PI = 3.14159265359; mat2 rot(float a) { return mat2(cos(a),-sin(a),sin(a),cos(a)); }mat2 rotHalf = mat2(cos(0.5), sin(0.5), -sin(0.5), cos(0.5));float fbm (in vec3 st) { float value = 0.0; float amp = .25; float frequency = 0.; float aM = (0.1 + 1.0000 * .65); vec2 shift = vec2(100.0); for (int i = 0; i < 8; i++) { value += amp * perlin_noise(st); st.xy *= rotHalf * 2.5; st.xy += shift; amp *= aM; } return value; }out vec4 fragColor;void main() { vec2 uv = vTextureCoord; float aspectRatio = uResolution.x/uResolution.y; float multiplier = 6.0 * (1.0000 / ((aspectRatio + 1.) / 2.));vec2 mPos = vec2(0.5, 0.5) + mix(vec2(0), (uMousePos-0.5), 0.0300); vec2 pos = mix(vec2(0.5, 0.5), mPos, floor(1.0000)); float mDist = ease(0, max(0.,1.-distance(uv * vec2(aspectRatio, 1), mPos * vec2(aspectRatio, 1)) * 4. * (1. - 1.0000))); vec2 st = ((uv - pos) * vec2(aspectRatio, 1)) * multiplier * aspectRatio; st = rot(0.0000 * -1. * 2.0 * PI) * st; vec2 drift = vec2(uTime * 0.005) * (0.0000 * 2.);float time = uTime * 0.025;vec2 r = vec2( fbm(vec3(st - drift + vec2(1.7, 9.2), 0.0000*25. + time)), fbm(vec3(st - drift + vec2(8.2, 1.3), 0.0000*25. + time)) );float f = fbm(vec3(st + r - drift, 0.0000*25. + time)) * 0.1000;vec2 offset = (f * 2. + (r * 0.1000));vec4 color = texture(uTexture, uv + offset * mDist); fragColor = color;}"],"compiledVertexShaders":["#version 300 es\nprecision mediump float;in vec3 aVertexPosition; in vec2 aTextureCoord;uniform mat4 uMVMatrix; uniform mat4 uPMatrix; uniform mat4 uTextureMatrix;out vec2 vTextureCoord; out vec3 vVertexPosition;void main() { gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0); vTextureCoord = (uTextureMatrix * vec4(aTextureCoord, 0.0, 1.0)).xy; }"],"data":{"depth":false,"uniforms":{},"isBackground":false},"id":"effect3"},{"breakpoints":[],"visible":true,"aspectRatio":1,"userDownsample":1,"layerType":"effect","type":"zoomBlur","usesPingPong":false,"trackMouse":0,"mouseMomentum":0,"texture":false,"animating":false,"isMask":0,"compiledFragmentShaders":["#version 300 es\nprecision highp float;in vec2 vTextureCoord;uniform sampler2D uTexture; uniform vec2 uMousePos; uniform vec2 uResolution; float ease (int easingFunc, float t) { return t; } uvec2 pcg2d(uvec2 v) { v = v * 1664525u + 1013904223u; v.x += v.y * v.y * 1664525u + 1013904223u; v.y += v.x * v.x * 1664525u + 1013904223u; v ^= v >> 16; v.x += v.y * v.y * 1664525u + 1013904223u; v.y += v.x * v.x * 1664525u + 1013904223u; return v; }float randFibo(vec2 p) { uvec2 v = floatBitsToUint(p); v = pcg2d(v); uint r = v.x ^ v.y; return float(r) / float(0xffffffffu); }out vec4 fragColor; float getExponentialWeight(int index) { switch(index) { case 0: return 1.0000000000; case 1: return 0.7165313106; case 2: return 0.5134171190; case 3: return 0.3678794412; case 4: return 0.2636050919; case 5: return 0.1888756057; case 6: return 0.1353352832; case 7: return 0.0969670595; case 8: return 0.0694877157; default: return 0.0; } }vec4 RadialBlur(sampler2D tex, vec2 uv) { if (0.3000 == 0.0) { return texture(tex, uv); } vec2 pos = vec2(0.5, 0.5) + mix(vec2(0), (uMousePos-0.5), 0.0000); float aspectRatio = uResolution.x/uResolution.y; vec2 dir = uv - pos; dir.x *= aspectRatio; float dist = distance(uv * vec2(aspectRatio, 1), pos * vec2(aspectRatio, 1)); dist = ease(0, max(0.,1.-dist * 4. * (1. - 1.0000))); if (0 == 1) { dist = max(0., (0.5 - dist)); }float amount = (0.3000 + 0.2) * dist * 0.01; if(0 == 1) amount *= 0.5; if(0 == 2) amount *= 0.25; if (amount < 0.0001) { return texture(tex, uv); } vec4 color = vec4(0.0); float total_weight = 0.0; vec4 center = texture(tex, uv); float center_weight = getExponentialWeight(0); color += center * center_weight; total_weight += center_weight; vec2 normalizedDir = normalize(dir); normalizedDir.x /= aspectRatio; for (int i = 1; i <= 8; i++) { float weight = getExponentialWeight(i); float offset = float(i) * amount; vec2 sampleDir = normalizedDir * offset; vec4 sample1 = texture(tex, uv + sampleDir); vec4 sample2 = texture(tex, uv - sampleDir); color += (sample1 + sample2) * weight; total_weight += 2.0 * weight; }color = color / total_weight; if(0 == 3) { float dither = (randFibo(gl_FragCoord.xy) - 0.5) / 255.0; color.rgb += dither; } return color; }vec4 radialBlurPass(vec2 uv) {return RadialBlur(uTexture, uv); }vec4 getPassColor(vec2 uv) { return radialBlurPass(uv); } void main() { vec2 uv = vTextureCoord; vec4 color = getPassColor(uv); fragColor = color;}","#version 300 es\nprecision highp float;in vec2 vTextureCoord;uniform sampler2D uTexture; uniform vec2 uMousePos; uniform vec2 uResolution; float ease (int easingFunc, float t) { return t; } uvec2 pcg2d(uvec2 v) { v = v * 1664525u + 1013904223u; v.x += v.y * v.y * 1664525u + 1013904223u; v.y += v.x * v.x * 1664525u + 1013904223u; v ^= v >> 16; v.x += v.y * v.y * 1664525u + 1013904223u; v.y += v.x * v.x * 1664525u + 1013904223u; return v; }float randFibo(vec2 p) { uvec2 v = floatBitsToUint(p); v = pcg2d(v); uint r = v.x ^ v.y; return float(r) / float(0xffffffffu); }out vec4 fragColor; float getExponentialWeight(int index) { switch(index) { case 0: return 1.0000000000; case 1: return 0.7165313106; case 2: return 0.5134171190; case 3: return 0.3678794412; case 4: return 0.2636050919; case 5: return 0.1888756057; case 6: return 0.1353352832; case 7: return 0.0969670595; case 8: return 0.0694877157; default: return 0.0; } }vec4 RadialBlur(sampler2D tex, vec2 uv) { if (0.3000 == 0.0) { return texture(tex, uv); } vec2 pos = vec2(0.5, 0.5) + mix(vec2(0), (uMousePos-0.5), 0.0000); float aspectRatio = uResolution.x/uResolution.y; vec2 dir = uv - pos; dir.x *= aspectRatio; float dist = distance(uv * vec2(aspectRatio, 1), pos * vec2(aspectRatio, 1)); dist = ease(0, max(0.,1.-dist * 4. * (1. - 1.0000))); if (0 == 1) { dist = max(0., (0.5 - dist)); }float amount = (0.3000 + 0.2) * dist * 0.01; if(1 == 1) amount *= 0.5; if(1 == 2) amount *= 0.25; if (amount < 0.0001) { return texture(tex, uv); } vec4 color = vec4(0.0); float total_weight = 0.0; vec4 center = texture(tex, uv); float center_weight = getExponentialWeight(0); color += center * center_weight; total_weight += center_weight; vec2 normalizedDir = normalize(dir); normalizedDir.x /= aspectRatio; for (int i = 1; i <= 8; i++) { float weight = getExponentialWeight(i); float offset = float(i) * amount; vec2 sampleDir = normalizedDir * offset; vec4 sample1 = texture(tex, uv + sampleDir); vec4 sample2 = texture(tex, uv - sampleDir); color += (sample1 + sample2) * weight; total_weight += 2.0 * weight; }color = color / total_weight; if(1 == 3) { float dither = (randFibo(gl_FragCoord.xy) - 0.5) / 255.0; color.rgb += dither; } return color; }vec4 radialBlurPass(vec2 uv) {return RadialBlur(uTexture, uv); }vec4 getPassColor(vec2 uv) { return radialBlurPass(uv); } void main() { vec2 uv = vTextureCoord; vec4 color = getPassColor(uv); fragColor = color;}","#version 300 es\nprecision highp float;in vec2 vTextureCoord;uniform sampler2D uTexture; uniform vec2 uMousePos; uniform vec2 uResolution; float ease (int easingFunc, float t) { return t; } uvec2 pcg2d(uvec2 v) { v = v * 1664525u + 1013904223u; v.x += v.y * v.y * 1664525u + 1013904223u; v.y += v.x * v.x * 1664525u + 1013904223u; v ^= v >> 16; v.x += v.y * v.y * 1664525u + 1013904223u; v.y += v.x * v.x * 1664525u + 1013904223u; return v; }float randFibo(vec2 p) { uvec2 v = floatBitsToUint(p); v = pcg2d(v); uint r = v.x ^ v.y; return float(r) / float(0xffffffffu); }out vec4 fragColor; float getExponentialWeight(int index) { switch(index) { case 0: return 1.0000000000; case 1: return 0.7165313106; case 2: return 0.5134171190; case 3: return 0.3678794412; case 4: return 0.2636050919; case 5: return 0.1888756057; case 6: return 0.1353352832; case 7: return 0.0969670595; case 8: return 0.0694877157; default: return 0.0; } }vec4 RadialBlur(sampler2D tex, vec2 uv) { if (0.3000 == 0.0) { return texture(tex, uv); } vec2 pos = vec2(0.5, 0.5) + mix(vec2(0), (uMousePos-0.5), 0.0000); float aspectRatio = uResolution.x/uResolution.y; vec2 dir = uv - pos; dir.x *= aspectRatio; float dist = distance(uv * vec2(aspectRatio, 1), pos * vec2(aspectRatio, 1)); dist = ease(0, max(0.,1.-dist * 4. * (1. - 1.0000))); if (0 == 1) { dist = max(0., (0.5 - dist)); }float amount = (0.3000 + 0.2) * dist * 0.01; if(2 == 1) amount *= 0.5; if(2 == 2) amount *= 0.25; if (amount < 0.0001) { return texture(tex, uv); } vec4 color = vec4(0.0); float total_weight = 0.0; vec4 center = texture(tex, uv); float center_weight = getExponentialWeight(0); color += center * center_weight; total_weight += center_weight; vec2 normalizedDir = normalize(dir); normalizedDir.x /= aspectRatio; for (int i = 1; i <= 8; i++) { float weight = getExponentialWeight(i); float offset = float(i) * amount; vec2 sampleDir = normalizedDir * offset; vec4 sample1 = texture(tex, uv + sampleDir); vec4 sample2 = texture(tex, uv - sampleDir); color += (sample1 + sample2) * weight; total_weight += 2.0 * weight; }color = color / total_weight; if(2 == 3) { float dither = (randFibo(gl_FragCoord.xy) - 0.5) / 255.0; color.rgb += dither; } return color; }vec4 radialBlurPass(vec2 uv) {return RadialBlur(uTexture, uv); }vec4 getPassColor(vec2 uv) { return radialBlurPass(uv); } void main() { vec2 uv = vTextureCoord; vec4 color = getPassColor(uv); fragColor = color;}","#version 300 es\nprecision highp float;in vec2 vTextureCoord;uniform sampler2D uTexture; uniform sampler2D uBgTexture; uniform vec2 uMousePos; uniform vec2 uResolution; float ease (int easingFunc, float t) { return t; }out vec4 fragColor;vec4 finalPass(vec2 uv) { if (0.3000 == 0.00) { return texture(uBgTexture, uv); } vec4 blurredColor = texture(uTexture, uv); vec4 originalColor = texture(uBgTexture, uv); vec2 pos = vec2(0.5, 0.5) + mix(vec2(0), (uMousePos-0.5), 0.0000); float aspectRatio = uResolution.x/uResolution.y; float dist = ease(0, max(0.,1.-distance(uv * vec2(aspectRatio, 1), pos * vec2(aspectRatio, 1)) * 4. * (1. - 1.0000))); if (0 == 1) { dist = max(0., (0.5 - dist)); }return mix(originalColor, blurredColor, (0.3000 * dist > 0.001) ? 1.0 : 0.0); }vec4 getPassColor(vec2 uv) { return finalPass(uv); } void main() { vec2 uv = vTextureCoord; vec4 color = getPassColor(uv); fragColor = color;}"],"compiledVertexShaders":["#version 300 es\nprecision mediump float;in vec3 aVertexPosition; in vec2 aTextureCoord;uniform mat4 uMVMatrix; uniform mat4 uPMatrix; uniform mat4 uTextureMatrix;out vec2 vTextureCoord; out vec3 vVertexPosition;void main() { gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0); vTextureCoord = (uTextureMatrix * vec4(aTextureCoord, 0.0, 1.0)).xy; }"],"data":{"downSample":0.5,"depth":false,"uniforms":{},"isBackground":false,"passes":[{"prop":"pass","value":1,"downSample":0.25},{"prop":"pass","value":2,"downSample":0.5},{"prop":"pass","value":3,"includeBg":true}]},"id":"effect4"},{"breakpoints":[{"max":null,"props":{"radius":2.28},"min":992,"name":"Desktop"},{"max":575,"props":{"radius":3.02},"name":"Mobile","min":0}],"visible":true,"aspectRatio":1,"userDownsample":1,"layerType":"effect","type":"sphere","usesPingPong":false,"trackMouse":0,"mouseMomentum":0,"texture":false,"animating":false,"isMask":0,"compiledFragmentShaders":["#version 300 es\nprecision mediump float; in vec3 vVertexPosition; in vec2 vTextureCoord; uniform sampler2D uTexture; uniform float uRadius; uniform vec2 uMousePos; uniform vec2 uResolution;const float STEPS = 16.0; const float PI = 3.1415926;vec3 chromaticAbberation(vec2 st, float angle, float amount, float blend) { float aspectRatio = uResolution.x/uResolution.y; float rotation = angle * 360.0 * PI / 180.0; vec2 aberrated = amount * vec2(0.1 * sin(rotation) * aspectRatio, 0.1 * cos(rotation)); aberrated *= distance(st, vec2(0.5)) * 2.0; vec4 red = vec4(0); vec4 blue = vec4(0); vec4 green = vec4(0); float invSteps = 1.0 / STEPS; float invStepsHalf = invSteps * 0.5; for(float i = 1.0; i <= STEPS; i++) { vec2 offset = aberrated * (i * invSteps); red += texture(uTexture, st - offset) * invSteps; blue += texture(uTexture, st + offset) * invSteps; }for (float i = 0.0; i <= STEPS; i++) { vec2 offset = aberrated * ((i * invSteps) - 0.5); green += texture(uTexture, st + offset) * invSteps; } return vec3(red.r, green.g, blue.b); }vec2 sphericalTransformation( float u, float v, float uCenter, float vCenter, float lensRadius, float tau) { float aspectRatio = uResolution.x/uResolution.y; u -= uCenter; v -= vCenter;float s = sqrt(u * u + v * v); if (s > lensRadius) return vec2(u + uCenter, v + vCenter);float z = sqrt(lensRadius * lensRadius - s * s);float uAlpha = (1.0 - (1.0 / tau)) * asin(u / lensRadius); float vAlpha = (1.0 - (1.0 / tau)) * asin(v / lensRadius);u = uCenter + z * sin(uAlpha); v = vCenter + z * sin(vAlpha);return vec2(u/aspectRatio, v); }float circularIn(float t) { return 1.0 - sqrt(1.0 - t * t); }vec2 fisheyeTransformation( float u, float v, float uCenter, float vCenter, float lensRadius, float distortionScale ) { float aspectRatio = uResolution.x / uResolution.y;vec2 dir = vec2(u - uCenter, v - vCenter);dir.x /= lensRadius; dir.y /= lensRadius;float dist = length(dir) * 0.15;if (dist < 1.0) { float theta = atan(dir.y, dir.x);float r = dist * 2.0 * PI; float z = sqrt(1.0 - r * r) + 0.25; float rDist = atan(r, z) / PI; float newDist = mix(dist, rDist, 5.);dir.x = newDist * cos(theta); dir.y = newDist * sin(theta); }dir.x *= lensRadius; dir.y *= lensRadius;return mix(vec2(u/aspectRatio, v), vec2(uCenter/aspectRatio, vCenter) + dir, 1.0000); }vec2 discTransformation( float u, float v, float uCenter, float vCenter, float lensRadius, float distortionScale) { float aspectRatio = uResolution.x/uResolution.y; u -= uCenter; v -= vCenter;float s = sqrt(u * u + v * v); if (s > lensRadius) return vec2(u + uCenter, v + vCenter); float r = sqrt(u * u + v * v) / lensRadius; if(r == 0.0) return vec2(uCenter, vCenter);r = pow(r, distortionScale); float theta = atan(r); float rad = theta / r;u = rad * u + uCenter; v = rad * v + vCenter;return vec2(u/aspectRatio, v); }out vec4 fragColor; void main() { vec2 uv = vTextureCoord; vec4 color = texture(uTexture, uv); float aspectRatio = uResolution.x/uResolution.y; uv.x = uv.x * aspectRatio; vec2 sphereCoords = uv; vec2 pos = vec2(0.5, 0.49867330016583744) + mix(vec2(0), (uMousePos-0.5), 0.0000); pos.x *= aspectRatio;float radius = uRadius * uResolution.x/max(uResolution.x, uResolution.y);if(0 == 0) { sphereCoords = sphericalTransformation( mix(sphereCoords.x, 1.-sphereCoords.x, 0.0000), mix(sphereCoords.y, 1.-sphereCoords.y, 0.0000), mix(pos.x, 1.-pos.x, 0.0000), mix(pos.y, 1.-pos.y, 0.0000), radius/2., 1. + 1.0000 * 9. ); } else if(0 == 1) { sphereCoords = discTransformation( mix(sphereCoords.x, 1.-sphereCoords.x, 0.0000), mix(sphereCoords.y, 1.-sphereCoords.y, 0.0000), mix(pos.x, 1.-pos.x, 0.0000), mix(pos.y, 1.-pos.y, 0.0000), radius/2., 1. + 1.0000 * 9. ); } else if(0 == 2) { sphereCoords = fisheyeTransformation( mix(sphereCoords.x, 1.-sphereCoords.x, 0.0000), mix(sphereCoords.y, 1.-sphereCoords.y, 0.0000), mix(pos.x, 1.-pos.x, 0.0000), mix(pos.y, 1.-pos.y, 0.0000), radius/2., 1. + 1.0000 * 9. ); }vec2 scaledCoords = (sphereCoords - 0.5) + 0.5; vec4 sphere = texture(uTexture, clamp(scaledCoords, 0.0, 1.0)); float distFromPos = distance(uv, pos); float edgeSmooth = 0.001; float insideSphere = 1.0 - smoothstep(radius/2.0 - edgeSmooth, radius/2.0, distFromPos); float insideSphereAlpha = 1.0 - smoothstep(radius/2.0 + 0.002 - edgeSmooth, radius/2.0 + 0.002, distFromPos); sphere.rgb = chromaticAbberation(scaledCoords, atan(scaledCoords.y, scaledCoords.x), distFromPos * 1.0000, 1.0); color = mix(color, sphere, insideSphere); color.rgb += vec3((0.0000-0.5)*2.) * mix(0., circularIn(smoothstep(0., radius, distFromPos)), insideSphere); if(0 == 1) { color.a = insideSphereAlpha; color.rgb = mix(vec3(0), color.rgb, insideSphereAlpha); } fragColor = color;}"],"compiledVertexShaders":["#version 300 es\nprecision mediump float;in vec3 aVertexPosition; in vec2 aTextureCoord;uniform mat4 uMVMatrix; uniform mat4 uPMatrix; uniform mat4 uTextureMatrix;out vec2 vTextureCoord; out vec3 vVertexPosition;void main() { gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0); vTextureCoord = (uTextureMatrix * vec4(aTextureCoord, 0.0, 1.0)).xy; }"],"data":{"depth":false,"uniforms":{"radius":{"name":"uRadius","type":"1f","value":0.5}},"isBackground":false},"id":"effect5"}],"options":{"name":"Cosmic Bloom (Remix)","fps":60,"dpi":1.5,"scale":1,"includeLogo":false,"isProduction":false,"freePlan":false},"version":"1.4.29","id":"9tVO0xGS8DIar1DF4Sqc"}</script>
+<script>
+/* Animated background (Unicorn Studio scene). SDK is self-hosted at
+   assets/unicorn-studio-sdk.js (vendored from the unicornstudio-react npm
+   package's own bundled copy - see site/assets/README.md) rather than
+   pulled from a third-party CDN, since there's no publicly documented
+   default CDN URL for it. Skips entirely on prefers-reduced-motion or if
+   the scene fails to load; .paper (the flat gradient underneath) still
+   shows either way, so there's no broken/empty state.
+
+   Scene data (layers/shaders/params) is inlined above as #unicornSceneData
+   instead of the SDK's default behavior of fetching it from
+   storage.googleapis.com/unicornstudio-production at runtime - that fetch
+   used a cache-busting `v=Date.now()` query param, so the browser could
+   never cache it and re-fetched it from Google Cloud Storage on every single
+   page load. `filePath: 'unicornSceneData'` below points the SDK at the
+   inlined <script id> instead (a mechanism the SDK itself already supports -
+   see the `document.getElementById(filePath)` branch in
+   assets/unicorn-studio-sdk.js), so there's zero network request for scene
+   data at all, matching why the SDK script itself is vendored rather than
+   pulled from a CDN. To refresh after editing the scene in Unicorn Studio,
+   re-fetch https://storage.googleapis.com/unicornstudio-production/embeds/9tVO0xGS8DIar1DF4Sqc
+   and paste the JSON back into #unicornSceneData above.
+
+   Deferred to window 'load': a Lighthouse run measured this single script
+   costing ~2.8s of main-thread scripting unthrottled (~14.7s under mobile's
+   4x CPU simulation) - evaluating it during the critical rendering path
+   tanked Performance to 37 (mobile) / 64 (desktop), LCP to 5.6s, TBT to
+   5.9s. Starting it at the 'load' event keeps it out of LCP/FCP; the
+   earlier extra 2s setTimeout on top of that was cut because the visible
+   gap before the halo appeared read as a bug - the script's bytes are now
+   prefetched in <head> (idle network priority, so the download itself no
+   longer adds to the post-load wait) and the container fades in via the
+   .on class the moment the scene actually renders. */
+(function () {
+  var container = document.getElementById('unicornBg');
+  if (!container || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  function loadScene() {
+    var script = document.createElement('script');
+    script.src = 'assets/unicorn-studio-sdk.js';
+    script.onload = function () {
+      if (!window.UnicornStudio || typeof window.UnicornStudio.addScene !== 'function') return;
+      window.UnicornStudio.addScene({
+        elementId: 'unicornBg',
+        filePath: 'unicornSceneData',
+        projectId: '9tVO0xGS8DIar1DF4Sqc',
+        production: true,
+        scale: 1,
+        dpi: Math.min(window.devicePixelRatio || 1, 2),
+        fps: 60
+      }).then(function () {
+        container.classList.add('on');
+      }).catch(function () { /* leave .paper showing underneath */ });
+    };
+    document.body.appendChild(script);
+  }
+  if (document.readyState === 'complete') loadScene();
+  else window.addEventListener('load', loadScene);
+})();
+
+/* Get-started terminal popup */
+(function () {
+  var btn = document.getElementById('getStarted');
+  var overlay = document.getElementById('termOverlay');
+  var body = document.getElementById('termBody');
+  var closeBtn = document.getElementById('termClose');
+  if (!btn || !overlay || !body) return;
+  var REPO_URL = 'https://github.com/AbhiiGatty/cld-flare-maxxing';
+  var link = function (href, label) { return '<a href="' + href + '" target="_blank" rel="noopener">' + label + '</a>'; };
+
+  // Our own pixel mascot: a Cloudflare-orange cloud creature (puffy cloud
+  // body, eye cutouts, two little feet) in the same left-of-banner spot a
+  // real Claude Code startup screen puts its mascot. Built as an SVG grid of
+  // rects, not Unicode block characters - an earlier Unicode version rendered
+  // lopsided because quadrant corner characters (▛▜▙▟▝▘▖▗) aren't covered by
+  // JetBrains Mono and the browser silently substituted a wider fallback
+  // font. An SVG grid has no font dependency, renders identically everywhere.
+  var MASCOT_ROWS = [
+    '....PPP....',
+    '..PPPPPPP..',
+    '.PPPPPPPPP.',
+    'PPPEPPPEPPP',
+    'PPPPPPPPPPP',
+    '.PPPPPPPPP.',
+    '..P.....P..'
+  ];
+  function mascotSVG() {
+    var cell = 4, rects = '';
+    MASCOT_ROWS.forEach(function (row, y) {
+      row.split('').forEach(function (ch, x) {
+        // 'P' = the cloud body (brand orange, same --accent as the rest of
+        // the page); 'E' = eye cutouts, left unpainted (true holes) so the
+        // frosted-glass panel shows through - a hardcoded dark fill would
+        // mismatch the translucent background behind it.
+        if (ch !== 'P') return;
+        rects += '<rect x="' + (x * cell) + '" y="' + (y * cell) + '" width="' + cell + '" height="' + cell + '" fill="#f6821f"/>';
+      });
+    });
+    var w = MASCOT_ROWS[0].length * cell, h = MASCOT_ROWS.length * cell;
+    return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '" shape-rendering="crispEdges" aria-hidden="true" style="display:block">' + rects + '</svg>';
+  }
+
+  // The scripted part of the transcript: typed out line by line by reveal().
+  // Everything after the final "Apply this? (y/n)" line is generated live by
+  // promptYesNo()/runApply()/runCancel() instead, since it depends on what
+  // the visitor actually types.
+  var SEQ = [
+    { c: 'comment', t: '# Visit: ' + link(REPO_URL, 'github.com/AbhiiGatty/cld-flare-maxxing') },
+    { c: 'cmd', t: '$ git clone ' + link(REPO_URL + '.git', REPO_URL + '.git') },
+    { c: 'dim', t: 'Cloning into \'cld-flare-maxxing\'... done.' },
+    { c: 'cmd', t: '$ cd cld-flare-maxxing' },
+    { c: 'cmd', t: '$ npm run setup' },
+    { c: 'dim', t: 'creating .env from .env.example...' },
+    { c: 'ok',  t: '✓ .env created' },
+    { c: 'ok',  t: '✓ CF_READ_TOKEN verified against the Cloudflare API' },
+    { c: 'sp' },
+    { c: 'cmd', t: '$ claude' },
+    // Startup banner in the same three-line shape a real Claude Code CLI
+    // opens with (name + version / model · plan / working directory), with
+    // our own cloud mascot standing in on the left. No copied product copy -
+    // the lines are ours, only the layout mirrors the real banner.
+    { c: 'mascot', t: '<span class="mascot-row"><span class="mascot-glyph">' + mascotSVG() + '</span><span class="mascot-lines"><span><span class="cmd">Claude Code</span> <span class="dim">v2.1.201</span></span><span class="dim">Sonnet 5 · Claude Max</span><span class="dim">~/cld-flare-maxxing</span></span></span>' },
+    { c: 'sp' },
+    { c: 'warn', t: '⚠ CF_EDIT_TOKEN not set · mutations stay behind break-glass' },
+    { c: 'sp' },
+    { c: 'box-top', t: '<span class="callout-label">Read-only</span>' },
+    { c: 'box-bottom', t: 'Nothing changes until you approve it. Full docs: ' + link(REPO_URL + '#readme', 'README') + '.' },
+    { c: 'dim', t: '  npm run refresh · npm run diff' },
+    { c: 'sp' },
+    { c: 'prompt', t: '> refresh and show me the dashboard' },
+    { c: 'tool', t: '● Running npm run refresh' },
+    { c: 'out',  t: '    snapshot -> 5 zones, 46 DNS records, 9 workers' },
+    { c: 'out',  t: '    report -> 30 findings (1 critical, 9 high)' },
+    { c: 'out',  t: '    live checks -> zones/DNS/WAF via Cloudflare\'s own MCP servers' },
+    { c: 'out',  t: '    betas -> 14/19 features scored' },
+    { c: 'ok',   t: '✓ dashboard ready at localhost:5180' },
+    { c: 'sp' },
+    { c: 'prompt', t: '> fix the SSL mode on example.com' },
+    { c: 'tool', t: '● Plan: Flexible -> Full (Strict)' },
+    { c: 'warn', t: '  Dry-run only. Nothing changes until you approve.' },
+    { c: 'warn', t: '  Apply this? (y/n)' }
+  ];
+
+  // Loose but finite - this is a marketing demo, not a form validator, so a
+  // short explicit list beats trying to parse free text.
+  var ACCEPT = ['y', 'yes', 'yeah', 'yup', 'yep', 'sure', 'ok', 'okay'];
+  var DECLINE = ['n', 'no', 'nope', 'nah', 'negative', 'never'];
+
+  var seqTimer = null;      // pending setTimeout from the typing sequence
+  var progressTimer = null; // pending setInterval from the "y" progress bar
+
+  function stopTimers() {
+    if (seqTimer) { clearTimeout(seqTimer); seqTimer = null; }
+    if (progressTimer) { clearInterval(progressTimer); progressTimer = null; }
+  }
+
+  // Appends one line to the transcript and returns the element, so callers
+  // (the progress bar) can keep updating it in place.
+  function appendLine(cls, html) {
+    var span = document.createElement('span');
+    span.className = 'term-line ' + cls;
+    span.innerHTML = html;
+    body.appendChild(span);
+    body.scrollTop = body.scrollHeight;
+    return span;
+  }
+
+  function reveal() {
+    body.innerHTML = ''; var i = 0;
+    (function step() {
+      if (i >= SEQ.length) { promptYesNo(); return; }
+      var s = SEQ[i++];
+      appendLine(s.c === 'sp' ? '' : s.c, s.c === 'sp' ? ' ' : s.t);
+      seqTimer = setTimeout(step, s.c === 'cmd' ? 520 : (s.c === 'sp' ? 150 : 300));
+    })();
+  }
+
+  // Renders the "> " reply line with a real <input> in place of typed text,
+  // so the visitor can actually answer the prompt above instead of just
+  // watching a canned transcript play out.
+  function promptYesNo() {
+    var line = appendLine('prompt', '&gt; <input id="termInput" class="term-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Type y or n">');
+    var input = line.querySelector('input');
+    input.focus();
+    input.addEventListener('keydown', function onKey(e) {
+      if (e.key !== 'Enter') return;
+      var raw = input.value.trim();
+      var val = raw.toLowerCase();
+      input.removeEventListener('keydown', onKey);
+      line.textContent = '> ' + raw; // freeze the line as plain typed text, like a real shell
+
+      if (ACCEPT.indexOf(val) !== -1) return runApply();
+      if (DECLINE.indexOf(val) !== -1) return runCancel();
+      appendLine('dim', 'Didn\'t catch that - try "y" or "n".');
+      promptYesNo();
+    });
+  }
+
+  function progressBar(pct) {
+    var width = 20, filled = Math.round((width * pct) / 100);
+    return '  [' + '█'.repeat(filled) + '░'.repeat(width - filled) + '] ' + Math.round(pct) + '%';
+  }
+
+  function runApply() {
+    appendLine('out', 'Applying (demo only - nothing real changes here)...');
+    var pct = 0;
+    var bar = appendLine('tool', progressBar(0));
+    progressTimer = setInterval(function () {
+      pct = Math.min(100, pct + 6 + Math.random() * 12);
+      bar.textContent = progressBar(pct);
+      body.scrollTop = body.scrollHeight;
+      if (pct >= 100) {
+        clearInterval(progressTimer); progressTimer = null;
+        appendLine('ok', '✓ SSL/TLS mode is now Full (Strict) on example.com');
+        appendLine('dim', 'That\'s the whole feature: one prompt, one confirm, done.');
+        appendLine('cursor', '&#9611;');
+      }
+    }, 140);
+  }
+
+  function runCancel() {
+    // Framed as a win, not an error - "changes nothing until you say so" is
+    // the whole pitch, so declining is the tool working exactly as promised.
+    appendLine('ok', '✓ Cancelled. Nothing was touched - exactly the point.');
+    appendLine('dim', 'Come back and hit "y" whenever you\'re ready.');
+    appendLine('cursor', '&#9611;');
+  }
+
+  function open(e) { if (e) e.preventDefault(); overlay.hidden = false; document.body.style.overflow = 'hidden'; reveal(); closeBtn.focus(); }
+  function close() { overlay.hidden = true; document.body.style.overflow = ''; stopTimers(); btn.focus(); }
+  btn.addEventListener('click', open);
+  closeBtn.addEventListener('click', close);
+  overlay.addEventListener('click', function (e) { if (e.target === overlay) close(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !overlay.hidden) close(); });
+})();
+
+</script>
+
+</body>
+</html>

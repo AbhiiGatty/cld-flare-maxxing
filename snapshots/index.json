@@ -1,0 +1,473 @@
+{
+  "latest": "2026-07-23T12-20-05Z",
+  "runs": [
+    {
+      "stamp": "2026-07-23T12-20-05Z",
+      "generatedAt": "2026-07-23T12:20:48.581Z",
+      "counts": {
+        "zones": 5,
+        "dnsRecords": 48,
+        "workers": 9,
+        "kv": 3,
+        "r2": 2,
+        "d1": 1,
+        "queues": 2,
+        "pages": 5,
+        "members": 1,
+        "tokens": 0,
+        "auditEntries": 1428,
+        "errors": 31
+      }
+    },
+    {
+      "stamp": "2026-07-07T04-36-14Z",
+      "generatedAt": "2026-07-07T04:36:25.952Z",
+      "counts": {
+        "zones": 5,
+        "dnsRecords": 47,
+        "workers": 8,
+        "kv": 3,
+        "r2": 2,
+        "d1": 1,
+        "queues": 2,
+        "pages": 5,
+        "members": 1,
+        "tokens": 0,
+        "auditEntries": 1335,
+        "errors": 31
+      }
+    },
+    {
+      "stamp": "2026-07-06T04-45-15Z",
+      "generatedAt": "2026-07-06T04:45:28.376Z",
+      "counts": {
+        "zones": 5,
+        "dnsRecords": 47,
+        "workers": 8,
+        "kv": 3,
+        "r2": 2,
+        "d1": 1,
+        "queues": 2,
+        "pages": 5,
+        "members": 1,
+        "tokens": 0,
+        "auditEntries": 1298,
+        "errors": 31
+      }
+    },
+    {
+      "stamp": "2026-07-05T04-40-00Z",
+      "generatedAt": "2026-07-05T04:40:15.620Z",
+      "counts": {
+        "zones": 5,
+        "dnsRecords": 47,
+        "workers": 8,
+        "kv": 3,
+        "r2": 2,
+        "d1": 1,
+        "queues": 2,
+        "pages": 5,
+        "members": 1,
+        "tokens": 0,
+        "auditEntries": 1482,
+        "errors": 31
+      }
+    },
+    {
+      "stamp": "2026-07-04T04-27-19Z",
+      "generatedAt": "2026-07-04T04:27:31.376Z",
+      "counts": {
+        "zones": 5,
+        "dnsRecords": 47,
+        "workers": 8,
+        "kv": 3,
+        "r2": 2,
+        "d1": 1,
+        "queues": 2,
+        "pages": 5,
+        "members": 1,
+        "tokens": 0,
+        "auditEntries": 1533,
+        "errors": 31
+      }
+    },
+    {
+      "stamp": "2026-07-03T04-31-49Z",
+      "generatedAt": "2026-07-03T04:32:04.567Z",
+      "counts": {
+        "zones": 5,
+        "dnsRecords": 47,
+        "workers": 8,
+        "kv": 3,
+        "r2": 2,
+        "d1": 1,
+        "queues": 2,
+        "pages": 5,
+        "members": 1,
+        "tokens": 0,
+        "auditEntries": 1452,
+        "errors": 31
+      }
+    },
+    {
+      "stamp": "2026-07-02T04-40-11Z",
+      "generatedAt": "2026-07-02T04:40:25.922Z",
+      "counts": {
+        "zones": 5,
+        "dnsRecords": 46,
+        "workers": 9,
+        "kv": 3,
+        "r2": 2,
+        "d1": 1,
+        "queues": 2,
+        "pages": 4,
+        "members": 1,
+        "tokens": 0,
+        "auditEntries": 1364,
+        "errors": 31
+      }
+    },
+    {
+      "stamp": "2026-07-01T04-50-39Z",
+      "generatedAt": "2026-07-01T04:50:50.639Z",
+      "counts": {
+        "zones": 5,
+        "dnsRecords": 46,
+        "workers": 9,
+        "kv": 3,
+        "r2": 2,
+        "d1": 1,
+        "queues": 2,
+        "pages": 4,
+        "members": 1,
+        "tokens": 0,
+        "auditEntries": 1397,
+        "errors": 31
+      }
+    },
+    {
+      "stamp": "2026-06-30T04-41-44Z",
+      "generatedAt": "2026-06-30T04:41:56.549Z",
+      "counts": {
+        "zones": 5,
+        "dnsRecords": 46,
+        "workers": 9,
+        "kv": 3,
+        "r2": 2,
+        "d1": 1,
+        "queues": 2,
+        "pages": 4,
+        "members": 1,
+        "tokens": 0,
+        "auditEntries": 1461,
+        "errors": 31
+      }
+    },
+    {
+      "stamp": "2026-06-29T04-53-17Z",
+      "generatedAt": "2026-06-29T04:53:28.300Z",
+      "counts": {
+        "zones": 5,
+        "dnsRecords": 46,
+        "workers": 9,
+        "kv": 3,
+        "r2": 2,
+        "d1": 1,
+        "queues": 2,
+        "pages": 4,
+        "members": 1,
+        "tokens": 0,
+        "auditEntries": 1470,
+        "errors": 31
+      }
+    },
+    {
+      "stamp": "2026-06-28T04-48-51Z",
+      "generatedAt": "2026-06-28T04:49:02.761Z",
+      "counts": {
+        "zones": 5,
+        "dnsRecords": 46,
+        "workers": 9,
+        "kv": 3,
+        "r2": 2,
+        "d1": 1,
+        "queues": 2,
+        "pages": 4,
+        "members": 1,
+        "tokens": 0,
+        "auditEntries": 1520,
+        "errors": 31
+      }
+    },
+    {
+      "stamp": "2026-06-27T04-37-50Z",
+      "generatedAt": "2026-06-27T04:38:02.493Z",
+      "counts": {
+        "zones": 5,
+        "dnsRecords": 46,
+        "workers": 9,
+        "kv": 3,
+        "r2": 2,
+        "d1": 1,
+        "queues": 2,
+        "pages": 4,
+        "members": 1,
+        "tokens": 0,
+        "auditEntries": 1698,
+        "errors": 31
+      }
+    },
+    {
+      "stamp": "2026-06-26T11-14-13Z",
+      "generatedAt": "2026-06-26T11:14:23.943Z",
+      "counts": {
+        "zones": 5,
+        "dnsRecords": 46,
+        "workers": 9,
+        "kv": 3,
+        "r2": 2,
+        "d1": 1,
+        "queues": 2,
+        "pages": 4,
+        "members": 1,
+        "tokens": 0,
+        "auditEntries": 1698,
+        "errors": 31
+      }
+    },
+    {
+      "stamp": "2026-06-26T04-44-58Z",
+      "generatedAt": "2026-06-26T04:45:12.895Z",
+      "counts": {
+        "zones": 5,
+        "dnsRecords": 46,
+        "workers": 9,
+        "kv": 3,
+        "r2": 2,
+        "d1": 1,
+        "queues": 2,
+        "pages": 4,
+        "members": 1,
+        "tokens": 0,
+        "auditEntries": 1744,
+        "errors": 31
+      }
+    },
+    {
+      "stamp": "2026-06-25T04-55-39Z",
+      "generatedAt": "2026-06-25T04:56:03.892Z",
+      "counts": {
+        "zones": 5,
+        "dnsRecords": 46,
+        "workers": 9,
+        "kv": 3,
+        "r2": 2,
+        "d1": 1,
+        "queues": 2,
+        "pages": 4,
+        "members": 1,
+        "tokens": 0,
+        "auditEntries": 1738,
+        "errors": 31
+      }
+    },
+    {
+      "stamp": "2026-06-25T04-41-51Z",
+      "generatedAt": "2026-06-25T04:42:02.943Z",
+      "counts": {
+        "zones": 5,
+        "dnsRecords": 46,
+        "workers": 9,
+        "kv": 3,
+        "r2": 2,
+        "d1": 1,
+        "queues": 2,
+        "pages": 4,
+        "members": 1,
+        "tokens": 0,
+        "auditEntries": 1735,
+        "errors": 31
+      }
+    },
+    {
+      "stamp": "2026-06-24T04-43-30Z",
+      "generatedAt": "2026-06-24T04:43:44.012Z",
+      "counts": {
+        "zones": 5,
+        "dnsRecords": 46,
+        "workers": 9,
+        "kv": 3,
+        "r2": 2,
+        "d1": 1,
+        "queues": 2,
+        "pages": 4,
+        "members": 1,
+        "tokens": 0,
+        "auditEntries": 1699,
+        "errors": 31
+      }
+    },
+    {
+      "stamp": "2026-06-23T04-40-39Z",
+      "generatedAt": "2026-06-23T04:40:51.859Z",
+      "counts": {
+        "zones": 5,
+        "dnsRecords": 46,
+        "workers": 9,
+        "kv": 3,
+        "r2": 2,
+        "d1": 1,
+        "queues": 2,
+        "pages": 4,
+        "members": 1,
+        "tokens": 0,
+        "auditEntries": 1783,
+        "errors": 31
+      }
+    },
+    {
+      "stamp": "2026-06-22T04-55-13Z",
+      "generatedAt": "2026-06-22T04:55:22.472Z",
+      "counts": {
+        "zones": 5,
+        "dnsRecords": 46,
+        "workers": 9,
+        "kv": 3,
+        "r2": 2,
+        "d1": 1,
+        "queues": 2,
+        "pages": 4,
+        "members": 1,
+        "tokens": 0,
+        "auditEntries": 1793,
+        "errors": 31
+      }
+    },
+    {
+      "stamp": "2026-06-21T07-13-56Z",
+      "generatedAt": "2026-06-21T07:14:07.343Z",
+      "counts": {
+        "zones": 5,
+        "dnsRecords": 46,
+        "workers": 9,
+        "kv": 3,
+        "r2": 2,
+        "d1": 1,
+        "queues": 2,
+        "pages": 4,
+        "members": 1,
+        "tokens": 0,
+        "auditEntries": 1839,
+        "errors": 31
+      }
+    },
+    {
+      "stamp": "2026-06-18T18-50-42Z",
+      "generatedAt": "2026-06-18T18:51:20.263Z",
+      "counts": {
+        "zones": 5,
+        "dnsRecords": 46,
+        "workers": 9,
+        "kv": 3,
+        "r2": 2,
+        "d1": 1,
+        "queues": 2,
+        "pages": 4,
+        "members": 1,
+        "tokens": 0,
+        "auditEntries": 2144,
+        "errors": 31
+      }
+    },
+    {
+      "stamp": "2026-06-18T18-42-35Z",
+      "generatedAt": "2026-06-18T18:43:11.095Z",
+      "counts": {
+        "zones": 5,
+        "dnsRecords": 46,
+        "workers": 9,
+        "kv": 3,
+        "r2": 2,
+        "d1": 1,
+        "queues": 2,
+        "pages": 4,
+        "members": 1,
+        "tokens": 0,
+        "auditEntries": 2144,
+        "errors": 31
+      }
+    },
+    {
+      "stamp": "2026-06-18T12-16-50Z",
+      "generatedAt": "2026-06-18T12:17:24.098Z",
+      "counts": {
+        "zones": 5,
+        "dnsRecords": 46,
+        "workers": 9,
+        "kv": 3,
+        "r2": 2,
+        "d1": 1,
+        "queues": 2,
+        "pages": 4,
+        "members": 1,
+        "tokens": 0,
+        "auditEntries": 2200,
+        "errors": 31
+      }
+    },
+    {
+      "stamp": "2026-06-18T12-15-48Z",
+      "generatedAt": "2026-06-18T12:16:25.749Z",
+      "counts": {
+        "zones": 5,
+        "dnsRecords": 46,
+        "workers": 9,
+        "kv": 3,
+        "r2": 2,
+        "d1": 1,
+        "queues": 2,
+        "pages": 4,
+        "members": 1,
+        "tokens": 0,
+        "auditEntries": 2200,
+        "errors": 31
+      }
+    },
+    {
+      "stamp": "2026-06-17T21-07-16Z",
+      "generatedAt": "2026-06-17T21:07:46.606Z",
+      "counts": {
+        "zones": 5,
+        "dnsRecords": 0,
+        "workers": 9,
+        "kv": 3,
+        "r2": 0,
+        "d1": 1,
+        "queues": 2,
+        "pages": 0,
+        "members": 1,
+        "tokens": 0,
+        "auditEntries": 2265,
+        "errors": 58
+      }
+    },
+    {
+      "stamp": "sample",
+      "generatedAt": "2026-06-17T00:00:00.000Z",
+      "counts": {
+        "zones": 2,
+        "dnsRecords": 4,
+        "workers": 9,
+        "kv": 3,
+        "r2": 2,
+        "d1": 1,
+        "queues": 0,
+        "pages": 0,
+        "members": 0,
+        "tokens": 0,
+        "auditEntries": 4,
+        "errors": 0
+      }
+    }
+  ]
+}

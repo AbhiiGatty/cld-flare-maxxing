@@ -1,0 +1,83 @@
+name: daily-snapshot
+
+# Captures a full account snapshot every day and opens a PR containing only its
+# pseudonymized snapshot.public.json files and index. The read-token job cannot
+# write to the repository. A separate job receives only the public artifact and
+# the short-lived repository permissions required to open the PR.
+#
+# One-time setup (Settings → Secrets and variables → Actions → New repository secret):
+#   CF_READ_TOKEN   — the read-only "Read all resources" token
+#   CF_ACCOUNT_ID   — find yours: it's printed by `npm run snapshot`, or in the
+#                     Cloudflare dashboard URL. Don't paste it here as a comment —
+#                     it's account-identifying; keep it in the repo secret only.
+#   CF_ALIAS_SALT   — the value auto-generated into your local .env (back it up!);
+#                     set it here too so the CI-produced aliases match your local ones.
+# These are read-only; no edit token is ever used here.
+
+on:
+  schedule:
+    - cron: '17 3 * * *' # 03:17 UTC daily
+  workflow_dispatch: {}    # allow manual runs from the Actions tab
+
+permissions:
+  contents: read
+
+concurrency:
+  group: daily-snapshot
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: '22'
+      - name: Capture snapshot → report → dashboard data → actions
+        env:
+          CF_READ_TOKEN: ${{ secrets.CF_READ_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_ALIAS_SALT: ${{ secrets.CF_ALIAS_SALT }}
+        run: |
+          if [ -z "$CF_READ_TOKEN" ]; then echo "CF_READ_TOKEN secret not set — skipping."; exit 0; fi
+          if [ -z "$CF_ALIAS_SALT" ]; then echo "CF_ALIAS_SALT secret not set — add it (same value as your local .env) so CI-produced aliases match yours."; exit 1; fi
+          node scripts/snapshot.mjs
+          node scripts/report.mjs
+          node scripts/betas.mjs
+          node scripts/build-dashboard-data.mjs
+          node scripts/build-actions.mjs
+      - name: Stage public snapshot artifact
+        run: |
+          mkdir -p "$RUNNER_TEMP/public-snapshot"
+          find snapshots -type f -name snapshot.public.json -exec cp --parents {} "$RUNNER_TEMP/public-snapshot" \;
+          cp --parents snapshots/index.json "$RUNNER_TEMP/public-snapshot"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: public-snapshot
+          path: ${{ runner.temp }}/public-snapshot
+          if-no-files-found: error
+          retention-days: 1
+
+  open-pr:
+    needs: snapshot
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: public-snapshot
+          path: .snapshot-artifact
+      - name: Restore public files only
+        run: cp -R .snapshot-artifact/snapshots/. snapshots/
+      - uses: peter-evans/create-pull-request@22a9089034f40e5a961c8808d113e2c98fb63676 # v7
+        with:
+          branch: automation/daily-snapshot
+          delete-branch: true
+          commit-message: "chore(snapshot): daily public snapshot"
+          title: "chore(snapshot): daily public snapshot"
+          body: "Automated read-only capture. Review the pseudonymized snapshot diff before merging."
+          add-paths: snapshots

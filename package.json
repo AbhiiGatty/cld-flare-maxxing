@@ -1,0 +1,39 @@
+{
+  "name": "cld-flare-maxxing",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The AI agent that runs your Cloudflare account for you: snapshot full state, generate insights/security reports, attribute changes, surface plan limits and beta features, and take guarded actions. Works with any AI coding harness.",
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
+  "scripts": {
+    "setup": "node scripts/setup.mjs",
+    "snapshot": "node scripts/snapshot.mjs",
+    "report": "node scripts/report.mjs",
+    "diff": "node scripts/diff.mjs",
+    "betas": "node scripts/betas.mjs",
+    "build-data": "node scripts/build-dashboard-data.mjs",
+    "capabilities": "node scripts/capabilities.mjs",
+    "actions": "node scripts/build-actions.mjs",
+    "refresh": "node scripts/snapshot.mjs && node scripts/report.mjs && node scripts/betas.mjs && node scripts/build-dashboard-data.mjs && node scripts/build-actions.mjs",
+    "dashboard": "npm --prefix dashboard ci && npm --prefix dashboard run dev",
+    "dashboard:build": "npm --prefix dashboard ci && npm --prefix dashboard run build",
+    "sanitize": "node scripts/sanitize.mjs",
+    "test": "node --test tests/*.test.mjs"
+  },
+  "keywords": [
+    "cloudflare",
+    "dns",
+    "security",
+    "audit",
+    "dashboard",
+    "snapshot",
+    "claude-code",
+    "ai-agent"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "wrangler": "4.114.0"
+  }
+}

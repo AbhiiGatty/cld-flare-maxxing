@@ -1,0 +1,136 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-17T00:00:00.000Z",
+  "stamp": "sample",
+  "account": {
+    "id": "sample-account",
+    "name": "SAMPLE — run `npm run refresh` for live data",
+    "type": "standard",
+    "settings": { "enforce_twofactor": false }
+  },
+  "user": null,
+  "subscriptions": [],
+  "members": [],
+  "roles": [],
+  "tokens": [],
+  "resources": {
+    "workers": [
+      { "id": "marketing-site", "modified_on": "2026-06-15T12:55:33Z" },
+      { "id": "api", "modified_on": "2026-06-10T03:04:21Z" },
+      { "id": "redirector", "modified_on": "2026-06-10T03:05:06Z" },
+      { "id": "image-resizer", "modified_on": "2026-05-16T15:03:01Z" },
+      { "id": "auth-service", "modified_on": "2026-06-12T18:42:04Z" },
+      { "id": "blog", "modified_on": "2026-06-12T04:10:41Z" },
+      { "id": "webhook-handler", "modified_on": "2026-06-16T03:28:27Z" },
+      { "id": "cron-runner", "modified_on": "2026-05-10T13:36:16Z" },
+      { "id": "edge-cache", "modified_on": "2026-06-16T08:18:23Z" }
+    ],
+    "kv": [
+      { "id": "0000000000000000000000000000kv01", "title": "sessions" },
+      { "id": "0000000000000000000000000000kv02", "title": "rate-limits" },
+      { "id": "0000000000000000000000000000kv03", "title": "page-cache" }
+    ],
+    "r2": [
+      { "name": "assets", "creation_date": "2026-05-12T10:44:14Z" },
+      { "name": "assets-dev", "creation_date": "2026-05-12T11:26:40Z" }
+    ],
+    "d1": [
+      { "name": "app-db", "uuid": "00000000-0000-0000-0000-0000000000d1" }
+    ],
+    "queues": [],
+    "pages": []
+  },
+  "zones": [
+    {
+      "id": "zone-example-com-0000000000000000",
+      "name": "example.com",
+      "status": "active",
+      "paused": false,
+      "type": "full",
+      "plan": "Free Website",
+      "ssl_mode": "flexible",
+      "settings": {
+        "ssl": "flexible",
+        "min_tls_version": "1.0",
+        "always_use_https": "off",
+        "automatic_https_rewrites": "on",
+        "security_level": "medium",
+        "cache_level": "aggressive",
+        "brotli": "on",
+        "http2": "on",
+        "http3": "on",
+        "browser_check": "on",
+        "development_mode": 0,
+        "security_header": { "strict_transport_security": { "enabled": false } }
+      },
+      "dnssec": { "status": "disabled" },
+      "certificatePacks": [{ "type": "universal", "status": "active" }],
+      "waf": { "custom": [], "managed": [], "rateLimit": [] },
+      "cacheRules": [],
+      "pageRules": [{ "id": "pr1", "status": "active" }],
+      "workersRoutes": [],
+      "dnsRecords": [
+        { "id": "r1", "type": "A", "name": "example.com", "content": "203.0.113.10", "proxied": false, "proxiable": true, "ttl": 1 },
+        { "id": "r2", "type": "CNAME", "name": "www.example.com", "content": "example.com", "proxied": true, "proxiable": true, "ttl": 1 },
+        { "id": "r3", "type": "MX", "name": "example.com", "content": "route1.mx.cloudflare.net", "priority": 1, "proxied": false, "ttl": 1 },
+        { "id": "r4", "type": "TXT", "name": "example.com", "content": "v=spf1 include:_spf.mx.cloudflare.net +all", "proxied": false, "ttl": 1 }
+      ],
+      "securityEvents": [
+        { "count": 42, "dimensions": { "action": "block", "source": "waf", "clientCountryName": "CN" } },
+        { "count": 18, "dimensions": { "action": "managed_challenge", "source": "firewallManaged", "clientCountryName": "RU" } }
+      ]
+    },
+    {
+      "id": "zone-parked-dev-00000000000000000",
+      "name": "parked.dev",
+      "status": "active",
+      "paused": false,
+      "type": "full",
+      "plan": "Free Website",
+      "ssl_mode": "full",
+      "settings": {
+        "ssl": "full",
+        "min_tls_version": "1.2",
+        "always_use_https": "on",
+        "automatic_https_rewrites": "on",
+        "security_level": "medium",
+        "cache_level": "aggressive",
+        "brotli": "on",
+        "http2": "on",
+        "http3": "on",
+        "browser_check": "on",
+        "development_mode": 0,
+        "security_header": { "strict_transport_security": { "enabled": true, "max_age": 31536000 } }
+      },
+      "dnssec": { "status": "active" },
+      "certificatePacks": [{ "type": "universal", "status": "active" }],
+      "waf": { "custom": [{ "id": "c1" }], "managed": [{ "id": "m1" }], "rateLimit": [{ "id": "rl1" }] },
+      "cacheRules": [],
+      "pageRules": [],
+      "workersRoutes": [],
+      "dnsRecords": [],
+      "securityEvents": []
+    }
+  ],
+  "auditLog": [
+    { "when": "2026-06-16T10:12:00Z", "actor": { "email": "owner@example.com", "type": "user", "ip": "203.0.113.5" }, "action": "dns_record.delete", "resource": "dns_record:abc123", "interface": "dashboard", "ray": "8a1" },
+    { "when": "2026-06-15T22:03:00Z", "actor": { "email": "ci-bot@example.com", "type": "api_token", "ip": "198.51.100.9" }, "action": "zone_setting.ssl.update", "resource": "zone:example.com", "interface": "api", "ray": "8a2" },
+    { "when": "2026-06-14T09:00:00Z", "actor": { "email": "owner@example.com", "type": "user", "ip": "203.0.113.5" }, "action": "api_token.create", "resource": "token:xyz789", "interface": "dashboard", "ray": "8a3" },
+    { "when": "2026-06-13T14:20:00Z", "actor": { "email": "owner@example.com", "type": "user", "ip": "203.0.113.5" }, "action": "logs.view", "resource": "analytics", "interface": "dashboard", "ray": "8a4" }
+  ],
+  "counts": {
+    "zones": 2,
+    "dnsRecords": 4,
+    "workers": 9,
+    "kv": 3,
+    "r2": 2,
+    "d1": 1,
+    "queues": 0,
+    "pages": 0,
+    "members": 0,
+    "tokens": 0,
+    "auditEntries": 4,
+    "errors": 0
+  },
+  "errors": []
+}

@@ -1,0 +1,35 @@
+name: Feature request
+description: Suggest a focused improvement
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: What problem would this solve?
+      description: Describe the Cloudflare task or safety gap, without including private account data.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Explain the smallest useful change and how it should work.
+    validations:
+      required: true
+  - type: dropdown
+    id: mutation
+    attributes:
+      label: Does this require changing a Cloudflare account?
+      options:
+        - No, it is read-only
+        - Yes, it needs a guarded action
+        - Unsure
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: List any existing command or Cloudflare product that comes close.

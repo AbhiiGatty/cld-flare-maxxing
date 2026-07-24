@@ -1,0 +1,54 @@
+name: Bug report
+description: Report a reproducible problem in the framework
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not paste API tokens, raw snapshots, the alias vault, or real account identifiers.
+        Report security problems through SECURITY.md instead.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Describe the problem and what you expected.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: How can we reproduce it?
+      description: Give the smallest safe example you can. Replace account data with placeholders.
+      placeholder: |
+        1. Run ...
+        2. Open ...
+        3. See ...
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Commit or release
+      description: The commit SHA or release tag where you saw the problem.
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Operating system, Node.js version, and AI coding harness.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Sanitized logs
+      description: Remove tokens and real account data before pasting logs.
+      render: shell
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety check
+      options:
+        - label: I removed API tokens, raw snapshots, real account identifiers, and private email addresses.
+          required: true
+        - label: This is not a security vulnerability.
+          required: true

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security report
+    url: https://github.com/AbhiiGatty/cld-flare-maxxing/security/advisories/new
+    about: Report a vulnerability privately. Do not open a public issue.
+  - name: Cloudflare product support
+    url: https://community.cloudflare.com/
+    about: Ask about Cloudflare itself in the Cloudflare community.

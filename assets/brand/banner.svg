@@ -1,0 +1,54 @@
+<svg width="1200" height="320" viewBox="0 0 1200 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="cld-flare-maxxing: the AI agent that runs your Cloudflare account for you">
+  <defs>
+    <linearGradient id="bannerMarkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffb454"/>
+      <stop offset="55%" stop-color="#f6821f"/>
+      <stop offset="100%" stop-color="#d96b12"/>
+    </linearGradient>
+    <radialGradient id="heroGlow" cx="50%" cy="8%" r="75%">
+      <stop offset="0%" stop-color="#f6821f" stop-opacity="0.20"/>
+      <stop offset="45%" stop-color="#f6821f" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#f6821f" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="vignette" cx="50%" cy="46%" r="72%">
+      <stop offset="55%" stop-color="#000000" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.55"/>
+    </radialGradient>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch" result="noise"/>
+      <feColorMatrix in="noise" type="saturate" values="0"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="320" fill="#060607"/>
+  <rect width="1200" height="320" fill="url(#heroGlow)"/>
+  <rect width="1200" height="320" fill="url(#vignette)"/>
+  <rect width="1200" height="320" filter="url(#grain)" opacity="0.035"/>
+
+  <!-- Centered lockup: mark + wordmark, treated as one hero line -->
+  <g id="lockup" transform="translate(627.7,120)">
+    <g transform="translate(-274,-32)" fill="url(#bannerMarkGrad)">
+      <ellipse cx="34" cy="45" rx="23.4" ry="11.7"/>
+      <circle cx="21.2" cy="34" r="11.7"/>
+      <circle cx="36" cy="25.5" r="13.8"/>
+      <circle cx="48.7" cy="36" r="10.6"/>
+    </g>
+    <path transform="translate(-274,-32)" d="M41.4 29.7 l2.4 5.7 5.7 2.4 -5.7 2.4 -2.4 5.7 -2.4 -5.7 -5.7 -2.4 5.7 -2.4z" fill="#060607"/>
+    <text x="-190" y="14" text-anchor="start" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="52" font-weight="600" letter-spacing="-0.02em" fill="#f5f5f7">cld-flare-<tspan fill="url(#bannerMarkGrad)">maxxing</tspan></text>
+  </g>
+
+  <!-- Tagline: one crisp line, generous space above and below -->
+  <text x="600" y="196" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="22" font-weight="400" letter-spacing="-0.005em" fill="#a1a1a6">The AI agent that runs your Cloudflare account for you</text>
+
+  <!-- Quiet capability line: tracked small caps, no boxes/chips -->
+  <text x="600" y="254" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="12" font-weight="600" letter-spacing="0.28em" fill="#6e6e73">SNAPSHOT&#160;&#160;&#183;&#160;&#160;INVESTIGATE&#160;&#160;&#183;&#160;&#160;GUARD&#160;&#160;&#183;&#160;&#160;MAXIMIZE</text>
+
+  <!-- Author's AG monogram, bottom-right corner - same mark/treatment as the
+       ".ag-corner" link on the live site (site/index.html), white at 70%
+       opacity so it reads as a quiet credit, not competing with the hero. -->
+  <g transform="translate(1127.5,267.2) scale(0.076)" fill="#ffffff" opacity="0.7">
+    <path d="M102.5 293.5L67.5 379H10L171 0H174.5L335.5 379H268.5L235 293.5L215.5 243H215.302L170 128.5L123 243.5H123.292L102.5 293.5Z"/>
+    <path d="M480.325 341.5C470.325 350.833 452.825 359.5 427.825 367.5C403.158 375.167 380.491 379 359.825 379C356.947 379 354.095 378.957 351.27 378.87L325.107 317.27C336.497 319.757 348.57 321 361.325 321C372.991 321 384.158 320 394.825 318C405.491 315.667 414.491 312.5 421.825 308.5V248H353.325V192H480.325V341.5Z"/>
+    <path d="M261.325 29.5C244.568 38.3714 229.793 49.7495 217 63.6343L217.325 63.5L244.082 126.5C249.455 116.617 256.203 107.783 264.325 100C288.325 77 321.158 65.5 362.825 65.5C375.158 65.5 389.491 67.6667 405.825 72C422.491 76.3334 435.825 81.5 445.825 87.5L464.825 33.5C450.491 25.5 433.825 19.1667 414.825 14.5C396.158 9.5 376.325 7 355.325 7C321.325 7 289.991 14.5 261.325 29.5Z"/>
+  </g>
+</svg>

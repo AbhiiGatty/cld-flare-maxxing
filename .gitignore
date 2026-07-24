@@ -1,0 +1,64 @@
+# ───────────────────────────────────────────────────────────────
+# SECRETS — never commit. These hold your Cloudflare API tokens.
+# ───────────────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.token
+*.secret
+secrets/
+
+# Node
+node_modules/
+dashboard/node_modules/
+npm-debug.log*
+.DS_Store
+
+# Dashboard build output (regenerated from snapshots)
+dashboard/dist/
+
+# wrangler local cache/state (created by scripts/actions/pages-deploy-site.mjs)
+.wrangler/
+
+# site/version.json is written fresh at deploy time by scripts/write-version.mjs
+# (called from scripts/actions/pages-deploy-site.mjs right before the wrangler
+# deploy). It's deploy output, not source — never commit it.
+site/version.json
+
+# Local scratch
+*.local
+.tmp/
+
+# reports/ is generated, local-only. Every findings report, the beta advisor
+# output, and the actions-audit log live only on your machine now, not in git.
+# (Previously committed on purpose; changed so the account-findings history
+# doesn't ride along in the public git history. Historical report commits
+# already in git history are untouched — this only stops future commits.)
+reports/*
+!reports/README.md
+
+# ───────────────────────────────────────────────────────────────
+# ACCOUNT DATA — raw (real names/ids/emails/IPs) stays LOCAL ONLY.
+# Only the pseudonymized snapshot.public.json (scripts/lib/idmap.mjs) is
+# committed. Real values are reversible offline via secrets/alias-map.json +
+# CF_ALIAS_SALT (both gitignored) — never from the committed data alone.
+# ───────────────────────────────────────────────────────────────
+snapshots/*/snapshot.json
+!snapshots/sample/snapshot.json
+
+# dashboard/public/data/*.json is generated from the raw local snapshot, so it
+# carries real names/emails/domains too — same treatment as reports/. Rebuild
+# anytime with `npm run build-data` / `npm run actions`.
+dashboard/public/data/*.json
+!dashboard/public/data/README.md
+
+# config/backlog.json and config/token-capabilities.json are YOUR curated
+# operational notes about your real account (zone names, account/zone ids) —
+# not shareable framework. See config/*.json.example for the templates that
+# do ship. config/backlog-curated.json is build-actions.mjs's non-finding
+# curated action list (moved out of script source — it used to hardcode real
+# project names directly in scripts/build-actions.mjs, which is meant to be
+# secret-free framework code).
+config/backlog.json
+config/token-capabilities.json
+config/backlog-curated.json
