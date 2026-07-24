@@ -18,6 +18,7 @@ environment containing the scoped Cloudflare credential instead of the full pare
 | `waf-managed-deploy.mjs` | deploy the account's Cloudflare Managed Ruleset onto a zone |
 | `purge-cache.mjs` | purge a zone's cache |
 | `pages-deploy-site.mjs` | deploy `site/` to Cloudflare Pages and attach its custom domain |
+| `pages-git-auto-deploy-toggle.mjs` | enable or disable automatic production and preview deploys from a connected Git repository |
 | `pages-preview-toggle.mjs` | change the preview-deployment setting for a Pages project |
 | `social-desk-provision.mjs` | create the Social Desk D1 database and exact-email Access application; operator addresses come from `--emails` or local `.env` |
 | `social-desk-deploy.mjs` | apply Social Desk D1 migrations and deploy its Worker and Custom Domain |

@@ -39,7 +39,7 @@ Cloudflare API (read token)                 reference/ (curated, from research)
 | `snapshots/` | `snapshot.json` local/real (gitignored) + **committed** pseudonymized `snapshot.public.json` |
 | `reports/`, `config/*.json`, `secrets/` | **local-only** (gitignored): reports, real curated config, the alias vault |
 | `dashboard/` | React/Vite single-page dashboard |
-| `.mcp.json` | live Cloudflare MCP servers (OAuth), any MCP-capable agent can use them |
+| `.mcp.json` | optional Cloudflare API and documentation MCP servers (OAuth) |
 | `.claude/` | permission tiers + tripwire hook (Claude Code-specific guardrails) |
 | `.claude/experiences/` | decision log: what was tried, why, and whether it got reversed - read before a key decision, write one after, any agent |
 | `AGENTS.md` | harness-neutral operating contract, for any AI coding harness |
@@ -58,14 +58,10 @@ workersRoutes, securityEvents), `auditLog[]` (normalized actor/action/resource/w
   `http_ratelimit`, `http_request_cache_settings`.
 - Audit logs use the **current v2 endpoint** `/accounts/{id}/logs/audit` (requires `since`/`before`).
 - Security events use the GraphQL `firewallEventsAdaptiveGroups` dataset.
-- The MCP servers in `.mcp.json` (bindings/observability/dns-analytics/builds/docs/graphql/radar,
-  plus the primary `cloudflare` "Code Mode" server) complement the REST snapshot for live
-  queries; all authenticate via a one-time OAuth on first use, separate from `CF_READ_TOKEN`/
-  `CF_EDIT_TOKEN`. The primary server has no fixed tool list - it runs agent-written JavaScript
-  against the live API (`docs`/`search`/`execute`) - so it's the one MCP tool here with its own
-  extra guardrail: `execute` requires approval and is hook-checked for DELETE/purge patterns
-  before it runs (`docs/SAFETY.md`). It's what gives live zone/DNS/WAF/SSL/rate-limit coverage
-  the other MCP servers don't reach (they cover Workers/KV/R2/D1/builds/logs).
+- The optional MCP configuration contains Cloudflare's API Code Mode server and documentation
+  server. The local REST snapshot does not depend on them. The API server authenticates with
+  OAuth and has no fixed endpoint tool list, so `execute` requires approval and is hook-checked
+  for DELETE and purge patterns before it runs (`docs/SAFETY.md`).
 
 ## Extending
 - **New check:** add an entry to `reference/heuristics-catalog.json` and a computation in

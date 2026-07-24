@@ -3,6 +3,22 @@
 This file records framework releases. Local Cloudflare account activity belongs in the
 gitignored `reports/actions-audit.log`, not in the public changelog.
 
+## Unreleased
+
+### Changed
+
+- Made the normal Claude Code and Codex path explicitly read-only and install-free.
+- Reduced optional Cloudflare MCP configuration to the API and documentation servers using
+  current Streamable HTTP endpoints.
+- Made the static website and its maintainer-only deployment path separate from user setup.
+
+### Fixed
+
+- Pages deployment preflight now reads the existing project list without unsupported
+  pagination and fails instead of reporting an API error as an empty account.
+- Claude Code imports the shared operating contract once and no longer requests an unavailable
+  conversation-style skill.
+
 ## v1.0.0 - 2026-07-24 - First public release candidate
 
 ### Added

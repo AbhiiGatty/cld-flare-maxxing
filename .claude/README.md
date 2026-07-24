@@ -16,4 +16,5 @@ instead; this folder is the Claude Code layer on top of that.
 | `skills/` | the `cloudflare-maxxing` skill (use-case map, platform map, beta advisor) |
 
 See `docs/SAFETY.md` for how the permission tiers and the hook fit into the three-layer
-defense model, and `CLAUDE.md` for the full operating contract.
+defense model. `CLAUDE.md` imports the shared `AGENTS.md` contract instead of duplicating it,
+then adds only the Claude-specific behavior.

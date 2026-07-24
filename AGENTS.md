@@ -4,7 +4,7 @@ This repo is a **versioned, guardrailed control center** for a Cloudflare accoun
 coding harness working here follows the rules below. They override default behavior.
 
 This file is the harness-neutral core. If you're Claude Code, also read `CLAUDE.md` for
-Claude-specific extras (skills, agents, interaction style) layered on top of these same rules.
+Claude-specific skills, agents, permissions, and hooks layered on top of these same rules.
 
 ## What this is
 - Snapshot the full account, DNS, zone, and security state into `snapshots/` — a local,
@@ -101,25 +101,22 @@ this repo end to end, no Claude-specific tooling required.
 ## Investigating
 - Start from `reports/latest-report.json` (findings, limits, attribution) and the dashboard.
 - If you have live Cloudflare API or MCP access, use it for deeper questions, and cite
-  Cloudflare's docs rather than guessing. `.mcp.json` wires Claude Code into Cloudflare's own
-  MCP servers automatically (bindings, builds, observability, docs, dns-analytics, graphql,
-  radar, and the primary `cloudflare` server for anything else, live). Other harnesses need
-  their own MCP config for the same servers -
-  [developers.cloudflare.com/agent-setup/prompt.md](https://developers.cloudflare.com/agent-setup/prompt.md)
-  has the current, authoritative snippet per agent (Codex, OpenCode, Windsurf, Cursor, Copilot);
-  fetch it live rather than trusting a copy pasted into this file, since Cloudflare's own server
-  list can change.
+  Cloudflare's docs rather than guessing. `.mcp.json` contains the optional Cloudflare API
+  Code Mode server and documentation server. The local read-token workflow does not depend on
+  MCP or OAuth. Other harnesses can follow
+  [Cloudflare's current agent setup](https://developers.cloudflare.com/agent-setup/) instead
+  of copying a server list from this file.
 - When asked "who changed X," read `snapshot.auditLog` / `reports/*-diff.json` attribution.
 
 ## Environment setup
-If `.env` or `.env.break-glass` is missing or incomplete when work starts, don't just point at
-`docs/TOKEN-SETUP.md`. Walk the user through it: which template to use ("Read all resources"
-for `CF_READ_TOKEN`), which permission table applies for `CF_EDIT_TOKEN` if they're about to
-make a change, and where in the Cloudflare dashboard to create it
-(`dash.cloudflare.com/profile/api-tokens`). Then run `npm run setup`, which auto-creates `.env`
-from `.env.example` and verifies the token reaches the API.
+If `.env` is missing or incomplete when work starts, don't just point at
+`docs/TOKEN-SETUP.md`. Walk the user through the "Read all resources" template for
+`CF_READ_TOKEN` and where to create it (`dash.cloudflare.com/profile/api-tokens`). Then run
+`npm run setup`, which auto-creates `.env` from `.env.example` and verifies the token reaches
+the API. Do not ask the user to create `CF_EDIT_TOKEN` during routine setup. Explain the
+permission table and `.env.break-glass` only after they request and approve a specific change.
 
-## Token model (two tokens, see docs/TOKEN-SETUP.md)
+## Token model (read first, optional edit, see docs/TOKEN-SETUP.md)
 - `CF_READ_TOKEN` (in `.env`): read-only, used for everything routine.
 - `CF_EDIT_TOKEN` (in `.env.break-glass`, only when armed): edit or destructive, scoped tight.
 

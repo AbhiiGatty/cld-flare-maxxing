@@ -51,9 +51,8 @@ destructive operations require an explicit, audited unlock.
 
 ### `mcp__cloudflare__execute` and OAuth scope
 `.mcp.json` also wires in Cloudflare's own primary MCP server (`mcp.cloudflare.com`, "Code
-Mode"), which extends live read coverage to zone/DNS/WAF/SSL/rate-limit state the
-`cloudflare-bindings`/`cloudflare-builds`/`cloudflare-observability` servers don't reach
-(those cover Workers/KV/R2/D1/builds/logs only). Unlike `CF_READ_TOKEN`/`CF_EDIT_TOKEN`, which
+Mode"), which extends live read coverage to zone, DNS, WAF, SSL, and rate-limit state.
+Unlike `CF_READ_TOKEN`/`CF_EDIT_TOKEN`, which
 this repo issues itself with a chosen scope, this server authenticates via **OAuth** - the
 permission it actually gets is whatever you approve on Cloudflare's own consent screen the
 first time it's used, not something this repo can force to read-only from its side. Choose a
