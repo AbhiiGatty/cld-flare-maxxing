@@ -112,9 +112,16 @@ remain open below.
   build. The workflow receives no Cloudflare token.
 - [x] Document the architecture correction and portable security follow-up in
   `.claude/experiences/`.
-- [ ] Merge the v1.1.0 release PR to `main`.
-- [ ] Create the annotated `v1.1.0` tag and GitHub Release.
-- [ ] Test both marketplace install commands from the public release.
+- [x] Merge release PR [#3](https://github.com/AbhiiGatty/cld-flare-maxxing/pull/3)
+  after its `verify` check passes.
+- [x] Create the annotated `v1.1.0` tag and publish the non-draft, non-prerelease GitHub
+  Release.
+- [x] Download the anonymous v1.1.0 source archive. All required manifests, marketplace files,
+  skill files, and both Cloudflare env templates are present. Its 271 files contain zero
+  forbidden private-state paths.
+- [ ] Run the exact marketplace install commands in clean Claude Code and Codex clients. The
+  Claude CLI is not installed on this machine, and the desktop Codex executable is not
+  callable from this shell. Local skill and plugin validators both pass.
 
 ## Site launch
 
@@ -141,6 +148,8 @@ remain open below.
 - [x] Switch the repository to public only after all release blockers are checked.
 - [x] Enable private vulnerability reporting, secret scanning, push protection, Dependabot
   security updates, and repository auto-merge.
+- [x] Protect `main`: require a pull request, the current `verify` check, linear history, and
+  resolved conversations; block force pushes and branch deletion.
 - [x] Verify the anonymous repository, README, license, and `v1.0.0` release return HTTP 200.
   Clone the public repository without credentials and run its documented setup path, tests,
   and dependency audit.
