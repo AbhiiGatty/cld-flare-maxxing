@@ -107,6 +107,11 @@ GitHub reported no checks on the v1.1.0 release PR. A read-only CI workflow was 
 merge. It receives no Cloudflare token and runs the regression tests, both dependency audits,
 and the dashboard build with pinned GitHub Actions.
 
+PR #3 and its `main` push both passed that check. The annotated v1.1.0 tag resolves to merge
+commit `1bd1018`. Its anonymous source archive contains all plugin templates and no forbidden
+private-state paths. GitHub's About text now describes the portable plugin, and `main` requires
+a pull request plus the `verify` check. Force pushes and branch deletion are disabled.
+
 ## Scope and method
 
 The audit covered the 157 locally tracked files, 13 untracked non-ignored files,
