@@ -1,6 +1,6 @@
 {
   "name": "cld-flare-maxxing",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
   "description": "The AI agent that runs your Cloudflare account for you: snapshot full state, generate insights/security reports, attribute changes, surface plan limits and beta features, and take guarded actions. Works with any AI coding harness.",

@@ -534,6 +534,7 @@
   var closeBtn = document.getElementById('termClose');
   if (!btn || !overlay || !body) return;
   var REPO_URL = 'https://github.com/AbhiiGatty/cld-flare-maxxing';
+  var PLUGIN_ID = 'cld-flare-maxxing@cld-flare-maxxing';
   var link = function (href, label) { return '<a href="' + href + '" target="_blank" rel="noopener">' + label + '</a>'; };
 
   // Our own pixel mascot: a Cloudflare-orange cloud creature (puffy cloud
@@ -573,35 +574,37 @@
   // promptYesNo()/runApply()/runCancel() instead, since it depends on what
   // the visitor actually types.
   var SEQ = [
-    { c: 'comment', t: '# Visit: ' + link(REPO_URL, 'github.com/AbhiiGatty/cld-flare-maxxing') },
-    { c: 'cmd', t: '$ git clone ' + link(REPO_URL + '.git', REPO_URL + '.git') },
-    { c: 'dim', t: 'Cloning into \'cld-flare-maxxing\'... done.' },
-    { c: 'cmd', t: '$ cd cld-flare-maxxing' },
-    { c: 'cmd', t: '$ npm run setup' },
-    { c: 'dim', t: 'creating .env from .env.example...' },
-    { c: 'ok',  t: '✓ .env created' },
-    { c: 'ok',  t: '✓ CF_READ_TOKEN verified against the Cloudflare API' },
+    { c: 'comment', t: '# Install once from ' + link(REPO_URL, 'github.com/AbhiiGatty/cld-flare-maxxing') },
+    { c: 'cmd', t: '$ claude plugin marketplace add ' + link(REPO_URL, 'AbhiiGatty/cld-flare-maxxing') },
+    { c: 'ok',  t: '✓ marketplace added' },
+    { c: 'cmd', t: '$ claude plugin install ' + PLUGIN_ID + ' --scope user' },
+    { c: 'ok',  t: '✓ plugin installed for this user' },
+    { c: 'cmd', t: '$ cd ~/your-project && claude' },
     { c: 'sp' },
-    { c: 'cmd', t: '$ claude' },
     // Startup banner in the same three-line shape a real Claude Code CLI
     // opens with (name + version / model · plan / working directory), with
     // our own cloud mascot standing in on the left. No copied product copy -
     // the lines are ours, only the layout mirrors the real banner.
-    { c: 'mascot', t: '<span class="mascot-row"><span class="mascot-glyph">' + mascotSVG() + '</span><span class="mascot-lines"><span><span class="cmd">Claude Code</span> <span class="dim">v2.1.201</span></span><span class="dim">Sonnet 5 · Claude Max</span><span class="dim">~/cld-flare-maxxing</span></span></span>' },
+    { c: 'mascot', t: '<span class="mascot-row"><span class="mascot-glyph">' + mascotSVG() + '</span><span class="mascot-lines"><span><span class="cmd">Claude Code</span> <span class="dim">v2.1.201</span></span><span class="dim">Sonnet 5 · Claude Max</span><span class="dim">~/your-project</span></span></span>' },
     { c: 'sp' },
-    { c: 'warn', t: '⚠ CF_EDIT_TOKEN not set · mutations stay behind break-glass' },
+    { c: 'warn', t: '⚠ CF_EDIT_TOKEN not created · account stays read-only' },
     { c: 'sp' },
     { c: 'box-top', t: '<span class="callout-label">Read-only</span>' },
-    { c: 'box-bottom', t: 'Nothing changes until you approve it. Full docs: ' + link(REPO_URL + '#readme', 'README') + '.' },
-    { c: 'dim', t: '  npm run refresh · npm run diff' },
+    { c: 'box-bottom', t: 'Creates only .cloudflare-maxxing/ in this project. Full docs: ' + link(REPO_URL + '#readme', 'README') + '.' },
+    { c: 'dim', t: '  Your .env, packages, source, and deploy stay untouched.' },
     { c: 'sp' },
-    { c: 'prompt', t: '> refresh and show me the dashboard' },
-    { c: 'tool', t: '● Running npm run refresh' },
+    { c: 'prompt', t: '> set up read-only Cloudflare access for this project' },
+    { c: 'tool', t: '● Running the bundled portable setup' },
+    { c: 'out',  t: '    created .cloudflare-maxxing/.env.cloudflare' },
+    { c: 'warn', t: '    add a Read all resources token locally · never paste it into chat' },
+    { c: 'ok',  t: '✓ CF_READ_TOKEN verified against the Cloudflare API' },
+    { c: 'sp' },
+    { c: 'prompt', t: '> check my account and show me what is misconfigured' },
+    { c: 'tool', t: '● Running the portable refresh' },
     { c: 'out',  t: '    snapshot -> 5 zones, 46 DNS records, 9 workers' },
     { c: 'out',  t: '    report -> 30 findings (1 critical, 9 high)' },
-    { c: 'out',  t: '    live checks -> zones/DNS/WAF via Cloudflare\'s own MCP servers' },
     { c: 'out',  t: '    betas -> 14/19 features scored' },
-    { c: 'ok',   t: '✓ dashboard ready at localhost:5180' },
+    { c: 'ok',   t: '✓ report ready under .cloudflare-maxxing/reports/' },
     { c: 'sp' },
     { c: 'prompt', t: '> fix the SSL mode on example.com' },
     { c: 'tool', t: '● Plan: Flexible -> Full (Strict)' },

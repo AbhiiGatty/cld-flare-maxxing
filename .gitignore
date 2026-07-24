@@ -4,6 +4,8 @@
 .env
 .env.*
 !.env.example
+!plugins/cld-flare-maxxing/skills/cloudflare-maxxing/scripts/runtime/templates/.env.cloudflare.example
+!plugins/cld-flare-maxxing/skills/cloudflare-maxxing/scripts/runtime/templates/.env.cloudflare.break-glass.example
 *.token
 *.secret
 secrets/

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "cld-flare-maxxing",
+  "owner": {
+    "name": "AbhiiGatty"
+  },
+  "metadata": {
+    "description": "Portable Cloudflare skills and guarded account tooling."
+  },
+  "plugins": [
+    {
+      "name": "cld-flare-maxxing",
+      "source": "./plugins/cld-flare-maxxing",
+      "description": "Inspect, explain, secure, and maximize Cloudflare from any project.",
+      "version": "1.1.0",
+      "category": "Developer Tools",
+      "tags": [
+        "cloudflare",
+        "security",
+        "dns",
+        "infrastructure"
+      ]
+    }
+  ]
+}

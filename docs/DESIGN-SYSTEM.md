@@ -227,10 +227,10 @@ state lives in one IIFE at the bottom of `site/index.html`.
 out one at a time (`reveal()`, a recursive `setTimeout` chain - `520ms` for a
 `$ cmd` line, `150ms` for a blank spacer, `300ms` for everything else),
 appended as `<span class="term-line <class>">`. It walks the README's actual
-quickstart (`git clone`, `cd`, `npm run setup`) into a `claude` launch, a
-Claude Code startup banner, a read-only callout, then two realistic prompts
-(`refresh and show me the dashboard`, `fix the SSL mode on example.com`)
-ending on `Apply this? (y/n)`.
+plugin install (`claude plugin marketplace add`, then `claude plugin install`)
+into a normal host-project `claude` launch. It shows the isolated
+`.cloudflare-maxxing/` state, read-only setup, an account check, and a guarded
+SSL change ending on `Apply this? (y/n)`.
 
 **The Claude Code banner** (`.glyph`/`.cmd`/`.dim`/`.chip` spans, three
 `banner`-class lines):
@@ -284,7 +284,7 @@ exactly the point"), not an error, matching the product's actual pitch
 
 **Links and the intro comment.** The transcript's first line is a `#`-prefixed
 shell comment (`.comment`, editor-green `#6a9955`) pointing at the GitHub
-repo; the `git clone` URL and the README link inside the callout are real
+repo; the marketplace source and the README link inside the callout are real
 `<a>` tags, colored `--accent-2` (blue) at rest - a distinct color, not just
 on hover, matching how a real terminal renders hyperlinks - brightening to
 `--accent` on hover like every other link on the page.

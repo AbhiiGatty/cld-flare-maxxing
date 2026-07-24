@@ -1,50 +1,109 @@
 # Use with Claude Code or Codex
 
-The simplest install is a clone. Open the repository as the agent's working folder. Claude
-Code and Codex then discover the included project skill without a marketplace install.
+Install the plugin once, then use it from any project. The project does not need Cloudflare
+packages, a copy of this repository, or changes to its existing `.env`.
 
-## One prompt setup
+## Claude Code
 
-Start Claude Code or Codex from the repository root and say:
+Add this repository as a marketplace and install the plugin:
 
-> Set up read-only Cloudflare access. Do not create an edit token. Then refresh and show me
-> the dashboard.
+```text
+/plugin marketplace add AbhiiGatty/cld-flare-maxxing
+/plugin install cld-flare-maxxing@cld-flare-maxxing
+```
+
+The terminal equivalents are:
+
+```bash
+claude plugin marketplace add AbhiiGatty/cld-flare-maxxing
+claude plugin install cld-flare-maxxing@cld-flare-maxxing --scope user
+```
+
+Claude Code loads the bundled skill, three Cloudflare agents, and the safety hook. The hook
+blocks ad-hoc Cloudflare writes and recursive deletion of this tool's saved state. It does
+not intercept normal edits to the host project.
+
+For local plugin development:
+
+```bash
+claude --plugin-dir ./plugins/cld-flare-maxxing
+```
+
+## Codex
+
+```bash
+codex plugin marketplace add AbhiiGatty/cld-flare-maxxing
+codex plugin add cld-flare-maxxing@cld-flare-maxxing
+```
+
+Codex loads the bundled skill and agent roles from the same package.
+
+## First prompt
+
+Open the project where you want to use Cloudflare Maxxing and say:
+
+> Use cloudflare-maxxing to set up read-only Cloudflare access for this project. Do not
+> create an edit token. Then refresh my account and explain the highest-priority findings.
 
 The agent should:
 
-1. Copy `.env.example` to the gitignored `.env`.
-2. Walk you through Cloudflare's **Read all resources** API-token template.
-3. Ask you to add that value as `CF_READ_TOKEN` locally.
-4. Run `npm run setup`, then `npm run refresh`.
-5. Run `npm run dashboard` only when you ask to view the dashboard.
+1. Create `<project>/.cloudflare-maxxing/`.
+2. Create `.cloudflare-maxxing/.env.cloudflare` from the bundled template.
+3. Guide you to Cloudflare's **Read all resources** token template.
+4. Ask you to save the value locally as `CF_READ_TOKEN`, never paste it into chat.
+5. Verify the token, take a snapshot, and generate a report.
+6. Open the dashboard only when you ask.
 
-The read-only scripts use Node.js built-ins. They do not need `npm install`. The dashboard
-installs its own locked packages when it starts.
+The nested `.gitignore` excludes everything in `.cloudflare-maxxing/` by default.
 
-## What each agent loads
+## Skill-only install
 
-Claude Code reads `CLAUDE.md`, the shared `AGENTS.md` contract, and
-`.claude/skills/cloudflare-maxxing/`.
+Copy the complete directory at:
 
-Codex reads `AGENTS.md` and `.agents/skills/cloudflare-maxxing/`.
+```text
+plugins/cld-flare-maxxing/skills/cloudflare-maxxing/
+```
 
-Both copies of the skill have the same instructions and reference files. The extra
-Claude-specific folder contains its permission rules, agents, and tripwire hook.
+to one of:
 
-## Optional parts
+```text
+<project>/.claude/skills/cloudflare-maxxing/
+<project>/.agents/skills/cloudflare-maxxing/
+```
 
-- `CF_EDIT_TOKEN` is not part of setup. Create it only for a specific approved change.
-- Cloudflare MCP access is optional. Normal snapshots and reports use `CF_READ_TOKEN`.
-- The public `site/` folder is maintainer-facing. No user command builds or deploys it.
-- Root `npm ci` installs the pinned Wrangler used by guarded deployment actions. Routine
-  read-only use does not need it.
+Do not copy only `SKILL.md`. Its `scripts/` directory contains the portable runner and
+runtime, while `references/` contains the product and safety guidance.
 
-## Copying only the skill
+The skill-only install can run the full read-only workflow and guarded actions. The plugin is
+recommended because it also supplies automatic updates, specialist agents, and Claude's
+command tripwire.
 
-You can copy the `cloudflare-maxxing` skill directory into another project if you only want
-Cloudflare product and architecture guidance. The full control center still needs this
-repository because snapshots, reports, the dashboard, safety hooks, and action scripts live
-here.
+## Direct runner commands
 
-See [token setup](TOKEN-SETUP.md) for the read-token steps and [safety](SAFETY.md) before
-making any account change.
+Resolve `scripts/cf-maxxing.mjs` relative to the installed skill, then run:
+
+```bash
+node "<skill-path>/scripts/cf-maxxing.mjs" init
+node "<skill-path>/scripts/cf-maxxing.mjs" setup
+node "<skill-path>/scripts/cf-maxxing.mjs" refresh
+node "<skill-path>/scripts/cf-maxxing.mjs" dashboard
+node "<skill-path>/scripts/cf-maxxing.mjs" where
+```
+
+The current working directory is the host project. Use
+`--project=<absolute-or-relative-path>` only when targeting another project.
+
+Routine commands use Node.js built-ins and do not install dependencies. The dashboard command
+copies its bundled source to `.cloudflare-maxxing/dashboard/` and installs locked packages
+there.
+
+## Boundaries
+
+- No command reads or modifies the host project's generic `.env`.
+- No command adds packages to the host project's package manifest.
+- No command deploys the host project.
+- Installed plugin and skill files are treated as read-only.
+- Cloudflare mutations still require a separate edit token, a dry run, approval, and
+  break-glass.
+
+See [token setup](TOKEN-SETUP.md) and [safety](SAFETY.md).

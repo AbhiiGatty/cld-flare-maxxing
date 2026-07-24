@@ -92,6 +92,28 @@ remain open below.
   no ignored private paths.
 - [x] Confirm the repository community profile after adding templates. GitHub reports 100%.
 
+## Portable plugin release
+
+- [x] Package the canonical distributable under `plugins/cld-flare-maxxing/`.
+- [x] Add Claude Code and Codex plugin manifests and repository marketplaces.
+- [x] Keep the full runner, runtime, reference catalog, dashboard, and guarded actions inside
+  the copyable skill directory.
+- [x] Store portable state only under `<host-project>/.cloudflare-maxxing/`.
+- [x] Verify that an existing host `.env` and `package.json` stay byte-for-byte unchanged.
+- [x] Verify that portable state does not appear as untracked host-project Git noise.
+- [x] Reject repository-maintainer and unknown actions from the portable runner.
+- [x] Test the Claude hook against benign host cleanup, recursive state deletion, direct
+  Cloudflare API deletion, Wrangler deletion, and Cloudflare Code Mode writes.
+- [x] Build the dashboard from a copied skill on Windows. The locked install reports zero
+  vulnerabilities.
+- [x] Pass the skill validator, plugin validator, all 25 Node tests, both dependency audits,
+  the targeted secret scan, and `git diff --check`.
+- [x] Document the architecture correction and portable security follow-up in
+  `.claude/experiences/`.
+- [ ] Merge the v1.1.0 release PR to `main`.
+- [ ] Create the annotated `v1.1.0` tag and GitHub Release.
+- [ ] Test both marketplace install commands from the public release.
+
 ## Site launch
 
 - [x] The live root returned HTTP 200 on five checks. After the first DNS lookup, measured

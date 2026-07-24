@@ -1,0 +1,494 @@
+{
+  "generatedAt": "2026-06-17",
+  "source": "cf-cc-research workflow (4 agents, cloudflare-docs + web search)",
+  "heuristics": [
+    {
+      "id": "dns-dangling-cname-external",
+      "category": "dns",
+      "severity": "critical",
+      "title": "Dangling CNAME pointing to unclaimed external service",
+      "detect": "For each DNS record where type=='CNAME' and the target points to a known SaaS/cloud host pattern (e.g. *.s3.amazonaws.com, *.github.io, *.herokuapp.com, *.azurewebsites.net, *.cloudfront.net, *.blob.core.windows.net, *.netlify.app, custom-domain endpoints), flag for verification. In the report engine, resolve content at scan time: if the CNAME target returns NXDOMAIN, an unprovisioned/404 'no such bucket'/'no such app' page, or the apex resolves to an unowned IP, mark as dangling subdomain takeover risk. Cross-reference name against zones list to ensure the parent is still actively used.",
+      "recommendation": "Delete the DNS record if the target service is decommissioned, or re-claim/provision the target resource. Maintain an inventory linking each external-pointing record to an owned, active resource."
+    },
+    {
+      "id": "dns-a-record-unresponsive-origin",
+      "category": "dns",
+      "severity": "high",
+      "title": "A/AAAA record pointing to unreachable or stale origin IP",
+      "detect": "For records type in {A,AAAA} with proxied==false (grey cloud): at scan time attempt a TCP connect / HTTP HEAD to content on ports 80/443. If the IP is in a reserved/private range (RFC1918 10/8, 172.16/12, 192.168/16, 169.254/16, ::1, fc00::/7) for a public-facing name, or connection refused/times out across all addresses for the name, flag. Also flag if multiple records for the same name resolve to wildly different ASNs suggesting leftover entries.",
+      "recommendation": "Remove stale records, fix the origin, or proxy through Cloudflare so failures are masked. Never publish RFC1918 addresses on a public authoritative zone."
+    },
+    {
+      "id": "dns-grey-cloud-http-record",
+      "category": "dns",
+      "severity": "medium",
+      "title": "Proxiable web record left grey-clouded (DNS-only)",
+      "detect": "For records type in {A,AAAA,CNAME} where proxiable==true and proxied==false and the name is a typical web hostname (apex '@', 'www', or no service-prefix like _ underscore). Exclude records that must stay DNS-only by convention: MX targets, mail/smtp/imap/pop/autodiscover/autoconfig hostnames, SPF/DKIM/DMARC TXT, NS, SRV underscore-prefixed, and records tagged for direct connect.",
+      "recommendation": "Enable the orange cloud (proxied=true) for web hostnames to gain WAF, caching, TLS termination, and origin IP masking. Keep mail and service records DNS-only."
+    },
+    {
+      "id": "dns-exposed-origin-ip-on-subdomain",
+      "category": "dns",
+      "severity": "high",
+      "title": "Origin IP leaked via grey-clouded subdomain while apex is proxied",
+      "detect": "Collect the set of origin IPs behind proxied records (not directly visible) and the set of IPs in grey-clouded A/AAAA records (cpanel, direct, origin, ftp, mail, dev, staging, vpn prefixes are common). If any grey-clouded record exposes an IP in the same /24 or same hosting block as the proxied origin, flag — the real origin is discoverable, enabling DDoS/WAF bypass.",
+      "recommendation": "Proxy or remove subdomains that reveal the origin network, move non-web services to a separate IP range, and restrict origin firewall to Cloudflare IP ranges only."
+    },
+    {
+      "id": "dns-wildcard-record-present",
+      "category": "dns",
+      "severity": "medium",
+      "title": "Wildcard DNS record increases attack surface",
+      "detect": "Any record whose name starts with '*.' (e.g. '*.example.com'). Flag as info-to-medium; escalate to high if the wildcard is grey-clouded (proxied==false) or points to a third-party SaaS target (combine with dangling-CNAME logic).",
+      "recommendation": "Replace wildcards with explicit records where feasible. A wildcard catches arbitrary subdomains, can mask typos, defeats per-host monitoring, and amplifies subdomain-takeover blast radius. If required, ensure it is proxied and the target is owned."
+    },
+    {
+      "id": "dns-cname-flattening-at-apex-check",
+      "category": "dns",
+      "severity": "info",
+      "title": "Apex CNAME relies on flattening — verify behavior",
+      "detect": "A record at the zone apex (name == zone name) with type=='CNAME'. Cloudflare flattens this to A/AAAA. Flag as info: confirm flattening target is owned and stable; combine with dangling-CNAME check since apex takeover is high impact.",
+      "recommendation": "Confirm the flattened target resolves to an owned origin. Prefer an explicit A/AAAA at apex when the origin IP is stable, or keep the CNAME only if the target is a managed, owned endpoint."
+    },
+    {
+      "id": "dns-duplicate-conflicting-records",
+      "category": "dns",
+      "severity": "low",
+      "title": "Duplicate or conflicting records for the same name",
+      "detect": "Group records by (name, type). Flag names with: multiple CNAMEs (invalid coexistence with other types), a CNAME coexisting with A/AAAA/MX/TXT on the same name, or many A records spanning unrelated networks. Also flag identical duplicate TXT/SPF entries.",
+      "recommendation": "Resolve conflicts: a name with a CNAME cannot have other record types. Consolidate duplicates and remove leftover entries from past migrations."
+    },
+    {
+      "id": "dns-low-ttl-on-static-records",
+      "category": "dns",
+      "severity": "info",
+      "title": "Unusually low TTL on stable records (when not proxied)",
+      "detect": "For non-proxied records (proxied==false) where ttl is a low fixed value (e.g. <300s) and the name is not part of an active migration. Note: proxied records report ttl==1 ('automatic') which is normal — exclude those.",
+      "recommendation": "Raise TTLs on stable grey-clouded records (e.g. 3600s) to reduce resolver load and improve resilience; keep low TTLs only during planned migrations."
+    },
+    {
+      "id": "dns-spf-missing",
+      "category": "email",
+      "severity": "high",
+      "title": "No SPF record on a mail-sending domain",
+      "detect": "For the zone apex, look for a TXT record whose content starts with 'v=spf1'. If absent AND the zone has MX records OR is configured for Email Routing/Sending, flag missing SPF. (A domain with no MX and an explicit null-MX may instead need the no-send hardening check.)",
+      "recommendation": "Publish an SPF TXT record at the apex authorizing legitimate senders, e.g. 'v=spf1 include:_spf.mx.cloudflare.net ~all'. Use the provider's documented include and end with ~all or -all."
+    },
+    {
+      "id": "dns-spf-weak-all-mechanism",
+      "category": "email",
+      "severity": "medium",
+      "title": "SPF uses +all or has no all mechanism",
+      "detect": "Parse the apex TXT 'v=spf1' record. Flag if it ends with '+all' (passes everything — severe), or has no all mechanism at all, or contains multiple 'v=spf1' TXT records on the same name (invalid — receivers see permerror).",
+      "recommendation": "End SPF with '~all' (softfail) or '-all' (hardfail). Never use '+all'. Ensure exactly one SPF record exists per domain."
+    },
+    {
+      "id": "dns-spf-too-many-lookups",
+      "category": "email",
+      "severity": "medium",
+      "title": "SPF exceeds 10 DNS-lookup limit",
+      "detect": "Recursively count DNS-lookup mechanisms in the SPF record: include, a, mx, ptr, exists, and redirect each cost a lookup, expanded transitively. If the total >10, the record produces a permerror and SPF fails. Flag.",
+      "recommendation": "Flatten or trim the SPF record: remove unused include: entries, consolidate providers, or use SPF flattening. Stay at or under 10 lookups."
+    },
+    {
+      "id": "dns-dmarc-missing",
+      "category": "email",
+      "severity": "high",
+      "title": "No DMARC record",
+      "detect": "Look for a TXT record at name '_dmarc' (i.e. _dmarc.<zone>) whose content starts with 'v=DMARC1'. If absent on a mail-sending domain (has MX or SPF), flag.",
+      "recommendation": "Publish '_dmarc' TXT starting with 'v=DMARC1'. Begin with 'p=none; rua=mailto:dmarc@yourdomain' to monitor, then progress to p=quarantine and p=reject once aligned."
+    },
+    {
+      "id": "dns-dmarc-policy-none-or-weak",
+      "category": "email",
+      "severity": "medium",
+      "title": "DMARC policy is p=none (monitor only) or misses reporting",
+      "detect": "Parse the _dmarc TXT. Flag if the p= tag is 'none' (no enforcement), if pct< 100 while enforcing, or if there is no 'rua=' aggregate-report address. Treat absence of p= as invalid (high).",
+      "recommendation": "Move toward 'p=quarantine' then 'p=reject' with 'pct=100' after confirming SPF/DKIM alignment. Always include a 'rua=' mailto for aggregate reports."
+    },
+    {
+      "id": "dns-dmarc-cross-domain-rua-unauthorized",
+      "category": "email",
+      "severity": "low",
+      "title": "DMARC rua/ruf points to another domain without authorization",
+      "detect": "If the _dmarc 'rua=' or 'ruf=' mailto domain differs from the zone, the receiving domain must publish a '<zone>._report._dmarc.<rua-domain>' TXT authorization (RFC 7489 §7.1). Flag when cross-domain reporting is configured but the authorization record is absent in the snapshot.",
+      "recommendation": "Add the '_report._dmarc' authorization TXT on the aggregator's domain, or use a same-domain rua address."
+    },
+    {
+      "id": "dns-dkim-missing",
+      "category": "email",
+      "severity": "medium",
+      "title": "No discoverable DKIM selector record",
+      "detect": "Search TXT records for any name containing '._domainkey' with content starting 'v=DKIM1'. If a domain sends mail (MX/SPF present) but no DKIM selector record exists in the snapshot, flag. Note common Cloudflare selectors: 'cf-bounce._domainkey' (Email Sending) and 'cf2024-1._domainkey' (Email Routing).",
+      "recommendation": "Publish the DKIM public-key TXT for each sending service's selector. Without DKIM, DMARC can only pass via SPF alignment, weakening deliverability and spoof resistance."
+    },
+    {
+      "id": "dns-mx-sanity",
+      "category": "email",
+      "severity": "medium",
+      "title": "MX configuration inconsistent or proxied",
+      "detect": "Flag if: an MX record's exchange target is a proxied Cloudflare hostname or an IP literal (MX must be a hostname, not IP); the MX target hostname has no corresponding A/AAAA (resolves to nothing); there are duplicate equal-priority MX with identical targets; or a domain has SPF/DKIM/DMARC indicating sending but zero MX and no explicit null MX. Also flag MX targets that are grey-clouded but resolve to RFC1918.",
+      "recommendation": "Point MX to resolvable mail-host names with sane priorities, ensure each target has A/AAAA, never proxy mail hosts, and use a null MX ('. ' priority 0) on domains that should never receive mail."
+    },
+    {
+      "id": "dns-no-send-domain-hardening",
+      "category": "email",
+      "severity": "low",
+      "title": "Parked / non-sending domain lacks anti-spoof hardening",
+      "detect": "Zone has no MX (or null MX) and no web records of substance, indicating it does not send mail. Flag if it lacks a restrictive SPF ('v=spf1 -all') and a reject DMARC ('v=DMARC1; p=reject;').",
+      "recommendation": "For domains that never send email, publish 'v=spf1 -all' and '_dmarc' with 'p=reject; sp=reject;' plus a null MX to prevent spoofing."
+    },
+    {
+      "id": "tls-flexible-ssl-mode",
+      "category": "tls",
+      "severity": "critical",
+      "title": "SSL/TLS encryption mode set to Flexible",
+      "detect": "Read zone setting id=='ssl' (GET /zones/:id/settings/ssl). If value=='flexible', flag critical. Flexible encrypts browser-to-Cloudflare but sends cleartext HTTP from Cloudflare to origin, exposing traffic and enabling redirect loops/MITM on the origin leg.",
+      "recommendation": "Switch to 'full' (origin has a cert) or preferably 'strict' (valid/trusted origin cert). Install a Cloudflare Origin CA certificate on the origin and use Authenticated Origin Pulls."
+    },
+    {
+      "id": "tls-full-not-strict",
+      "category": "tls",
+      "severity": "medium",
+      "title": "SSL/TLS mode is Full (not Full Strict)",
+      "detect": "Zone setting id=='ssl' value=='full'. Flag medium: 'full' encrypts the origin leg but does not validate the origin certificate, allowing MITM with a self-signed/invalid cert.",
+      "recommendation": "Upgrade to 'strict' once a valid trusted origin certificate (e.g. Cloudflare Origin CA or public CA) is installed, to validate the origin identity."
+    },
+    {
+      "id": "tls-min-version-low",
+      "category": "tls",
+      "severity": "high",
+      "title": "Minimum TLS version below 1.2",
+      "detect": "Read zone setting id=='min_tls_version' (or per-hostname TLS setting). If value in {'1.0','1.1'}, flag. TLS 1.0/1.1 are deprecated and fail PCI DSS.",
+      "recommendation": "Set minimum TLS version to '1.2' (or '1.3' where client compatibility allows). Update via the min_tls_version zone setting."
+    },
+    {
+      "id": "tls-weak-cipher-suites",
+      "category": "tls",
+      "severity": "medium",
+      "title": "Custom cipher suites include weak/legacy ciphers",
+      "detect": "Read zone setting id=='ciphers' (array). If non-empty and includes CBC-mode, SHA-1, 3DES, RC4, or non-PFS RSA-kex ciphers, or omits modern AEAD suites (ECDHE-*-GCM / CHACHA20-POLY1305), flag. Empty array == Cloudflare defaults (acceptable).",
+      "recommendation": "Reset to defaults (empty array) or restrict to the modern/PCI/FIPS recommended sets: ECDHE-ECDSA/RSA with AES-GCM and CHACHA20-POLY1305."
+    },
+    {
+      "id": "tls-always-use-https-off",
+      "category": "tls",
+      "severity": "high",
+      "title": "Always Use HTTPS disabled",
+      "detect": "Read zone setting id=='always_use_https'. If value=='off', flag. Without it, plain-HTTP requests are served over cleartext instead of redirected to HTTPS. Also check for an equivalent redirect via a 'http_request_dynamic_redirect' ruleset / page rule before flagging to avoid false positives.",
+      "recommendation": "Enable 'always_use_https' (or implement an equivalent edge redirect rule) so all HTTP requests 301 to HTTPS."
+    },
+    {
+      "id": "tls-automatic-https-rewrites-off",
+      "category": "tls",
+      "severity": "low",
+      "title": "Automatic HTTPS Rewrites disabled",
+      "detect": "Read zone setting id=='automatic_https_rewrites'. If value=='off', flag low — mixed-content subresources may load over HTTP and be blocked by browsers.",
+      "recommendation": "Enable 'automatic_https_rewrites' to rewrite eligible http:// subresource links to https://, reducing mixed-content breakage."
+    },
+    {
+      "id": "tls-hsts-disabled",
+      "category": "tls",
+      "severity": "medium",
+      "title": "HSTS not enabled",
+      "detect": "Read zone setting id=='security_header' (HSTS). If value.strict_transport_security.enabled != true, flag. If enabled but max_age < 15552000 (180 days), or include_subdomains/preload are false for a security-sensitive site, flag lower severity.",
+      "recommendation": "Enable HSTS with max_age >= 31536000 (1 year), include_subdomains=true, and consider preload after verifying all subdomains serve HTTPS. Enable only after Always Use HTTPS is confirmed working."
+    },
+    {
+      "id": "tls-opportunistic-encryption-off",
+      "category": "tls",
+      "severity": "info",
+      "title": "Opportunistic Encryption / TLS 1.3 not enabled",
+      "detect": "Read zone settings id=='tls_1_3' (flag if 'off') and id=='opportunistic_encryption' (flag info if 'off').",
+      "recommendation": "Enable TLS 1.3 for performance and security, and Opportunistic Encryption to upgrade eligible cleartext connections."
+    },
+    {
+      "id": "tls-universal-ssl-disabled",
+      "category": "tls",
+      "severity": "high",
+      "title": "Universal SSL / edge certificate inactive",
+      "detect": "Check the zone's edge certificate state (Universal SSL setting or /ssl/certificate_packs). If Universal SSL is disabled and no custom edge certificate is active for the zone, browsers get TLS errors. Flag high.",
+      "recommendation": "Enable Universal SSL or upload a valid custom certificate so the zone always has an active edge certificate covering apex and www."
+    },
+    {
+      "id": "sec-dnssec-disabled",
+      "category": "security",
+      "severity": "high",
+      "title": "DNSSEC not enabled / DS record not published",
+      "detect": "Read DNSSEC status (GET /zones/:id/dnssec). If status != 'active' (i.e. 'disabled' or 'pending' where DS was never added at the registrar), flag. For zones on Cloudflare registrar, escalate since one-click activation is available.",
+      "recommendation": "Enable DNSSEC in Cloudflare and add the generated DS record at the domain registrar to prevent DNS spoofing/cache poisoning."
+    },
+    {
+      "id": "sec-security-level-off",
+      "category": "security",
+      "severity": "medium",
+      "title": "Security Level set to Off / Essentially Off",
+      "detect": "Read zone setting id=='security_level'. If value=='off' (or 'essentially_off' for a production zone without compensating WAF rules), flag — the IP-reputation challenge layer is disabled.",
+      "recommendation": "Set Security Level to at least 'medium'. Use 'high'/'under_attack' temporarily during incidents. Pair with WAF custom rules for precise control."
+    },
+    {
+      "id": "sec-no-waf-custom-rules",
+      "category": "security",
+      "severity": "medium",
+      "title": "No WAF custom rules deployed",
+      "detect": "Fetch the entrypoint ruleset for phase 'http_request_firewall_custom' (GET /zones/:id/rulesets/phases/http_request_firewall_custom/entrypoint). If it does not exist or its rules array is empty, flag. Combine context: a public app with no custom protections is higher risk.",
+      "recommendation": "Deploy WAF custom rules in the http_request_firewall_custom phase for app-specific protections (admin path lockdown, country/ASN rules, bad-bot blocks) on top of managed rules."
+    },
+    {
+      "id": "sec-managed-waf-disabled",
+      "category": "security",
+      "severity": "high",
+      "title": "Cloudflare Managed WAF ruleset not deployed or disabled",
+      "detect": "Inspect the http_request_firewall_managed phase entrypoint ruleset for deployed managed rulesets (e.g. Cloudflare Managed Ruleset, OWASP Core Ruleset). Flag if none are deployed, or all execute-rule entries have enabled==false, or action is set to 'log' only (not blocking) on Pro+ plans.",
+      "recommendation": "Deploy the Cloudflare Managed Ruleset (and OWASP CRS as needed) in the managed phase with blocking/challenge actions on sensitive rules; avoid leaving everything in log-only mode in production."
+    },
+    {
+      "id": "sec-no-rate-limiting",
+      "category": "security",
+      "severity": "medium",
+      "title": "No rate limiting rules configured",
+      "detect": "Fetch the entrypoint ruleset for phase 'http_request_ratelimit'. If absent or rules array empty, and the zone exposes login/API/form endpoints, flag. (Legacy rate-limiting rules live under the rate_limits API — check both.)",
+      "recommendation": "Add rate limiting rules on auth, API, and form endpoints (e.g. block >N requests/min/IP). Use the 'Protect your login' template as a baseline (5 POSTs / 5 min)."
+    },
+    {
+      "id": "sec-bot-fight-mode-off",
+      "category": "security",
+      "severity": "low",
+      "title": "Bot Fight Mode / Super Bot Fight Mode disabled",
+      "detect": "Read bot management config (GET /zones/:id/bot_management). If fight_mode==false and sbfm_definitely_automated=='allow' / sbfm_likely_automated=='allow' (no challenge/block) and no Bot Management entitlement is active, flag low.",
+      "recommendation": "Enable Bot Fight Mode (free) or Super Bot Fight Mode (Pro+) to challenge/block automated traffic; configure verified-bot allowances to avoid blocking good crawlers."
+    },
+    {
+      "id": "sec-browser-integrity-check-off",
+      "category": "security",
+      "severity": "low",
+      "title": "Browser Integrity Check disabled",
+      "detect": "Read zone setting id=='browser_check'. If value=='off', flag low — common malicious header/user-agent heuristics are not applied.",
+      "recommendation": "Enable Browser Integrity Check to block requests with suspicious headers/user agents at low operational cost."
+    },
+    {
+      "id": "sec-no-managed-challenge-on-sensitive-paths",
+      "category": "security",
+      "severity": "low",
+      "title": "Sensitive paths lack challenge/Turnstile protection",
+      "detect": "Inspect custom-rule expressions for coverage of sensitive paths (login, /admin, /wp-login.php, /xmlrpc.php, password reset, signup). If no rule applies a managed_challenge/js_challenge/block to these paths and Bot Fight Mode is off, flag.",
+      "recommendation": "Add a managed-challenge custom rule on authentication and admin endpoints, or front them with Turnstile, to deter credential stuffing and enumeration."
+    },
+    {
+      "id": "sec-wordpress-exposed-endpoints",
+      "category": "security",
+      "severity": "medium",
+      "title": "WordPress xmlrpc/wp-login exposed without rules",
+      "detect": "If DNS/Workers/headers indicate WordPress (records, /wp-* paths in rules) and there is no custom rule or rate limit covering '/xmlrpc.php' or '/wp-login.php', flag medium (common brute-force/amplification vectors).",
+      "recommendation": "Block or rate-limit /xmlrpc.php and challenge /wp-login.php via WAF custom rules; deploy the WordPress-specific managed ruleset where available."
+    },
+    {
+      "id": "sec-worker-routes-no-protection",
+      "category": "security",
+      "severity": "low",
+      "title": "Worker routes lack upstream WAF coverage",
+      "detect": "List Workers routes/custom domains. For any route serving user input with no custom WAF rule or rate limit matching its path, flag info/low. Also flag Workers whose code (workers_get_worker_code) contains hardcoded secrets/tokens patterns.",
+      "recommendation": "Apply WAF and rate-limiting to paths handled by Workers, move secrets to encrypted environment bindings/Secrets Store, and review Worker code for injected credentials."
+    },
+    {
+      "id": "access-too-many-members",
+      "category": "access",
+      "severity": "medium",
+      "title": "Excessive number of account members",
+      "detect": "Count account members (GET /accounts/:id/members). Flag if total exceeds an org-configured threshold (e.g. >15) or if the proportion of Super Administrator role members is high (e.g. >3 or >30% of members). Also flag members with status=='pending' that are stale.",
+      "recommendation": "Apply least privilege: reduce Super Administrators to a small set, use scoped roles (e.g. Domain/DNS/Firewall admin), and remove stale or pending invitations."
+    },
+    {
+      "id": "access-super-admin-overuse",
+      "category": "access",
+      "severity": "high",
+      "title": "Members hold Super Administrator when scoped roles suffice",
+      "detect": "For each member, inspect roles array. Flag members whose role name contains 'Super Administrator - All Privileges' but whose activity (audit logs) only touches a narrow product area (e.g. only DNS). Always flag if every member is Super Admin (no role segmentation).",
+      "recommendation": "Downgrade over-privileged members to least-privilege scoped roles matching their actual responsibilities; reserve Super Administrator for a minimal break-glass set."
+    },
+    {
+      "id": "access-member-2fa-disabled",
+      "category": "access",
+      "severity": "high",
+      "title": "Account member without two-factor authentication",
+      "detect": "For each member, read the 2FA signal (member.user.two_factor_authentication_enabled where exposed). Flag any member with two_factor_authentication_enabled==false, especially Super Administrators. If the field is unavailable, flag at account level that 2FA enforcement policy could not be confirmed.",
+      "recommendation": "Require 2FA for all members and enforce account-level 2FA enforcement so members without it lose access until they enroll. Prioritize admins."
+    },
+    {
+      "id": "access-2fa-enforcement-off",
+      "category": "access",
+      "severity": "medium",
+      "title": "Account-level 2FA enforcement not enabled",
+      "detect": "Check account settings for the 'enforce_twofactor' / two-factor enforcement policy. If not enabled while the account has multiple members, flag.",
+      "recommendation": "Turn on account-wide 2FA enforcement so all current and future members must use two-factor authentication."
+    },
+    {
+      "id": "access-stale-api-token",
+      "category": "access",
+      "severity": "medium",
+      "title": "API token unused for an extended period",
+      "detect": "List API tokens (GET /user/tokens and /accounts/:id/tokens). For each token compare last_used_on to now. Flag if last_used_on is null and issued_on > 90 days ago, or last_used_on > 90 days ago. Cross-check against audit logs for inactivity.",
+      "recommendation": "Revoke or roll tokens that are unused beyond your rotation window (e.g. 90 days). Keep an owner and purpose annotation for every active token."
+    },
+    {
+      "id": "access-token-no-expiration",
+      "category": "access",
+      "severity": "medium",
+      "title": "API token has no expiration date",
+      "detect": "For each API token, inspect expires_on. If null/absent (never expires), flag. Escalate to high if the token also has broad write permissions.",
+      "recommendation": "Set an expires_on (not_after) on every token and rotate before expiry; avoid perpetual tokens, especially for CI/CD and third-party integrations."
+    },
+    {
+      "id": "access-token-overscoped",
+      "category": "access",
+      "severity": "high",
+      "title": "API token over-scoped (broad write or all-zones/all-accounts)",
+      "detect": "Inspect each token's policies[].permission_groups and resources. Flag if resources use a wildcard ('com.cloudflare.api.account.zone.*' / all zones, or '*' account scope) combined with write permission groups (e.g. 'Zone Write', 'DNS Write', 'Account Settings Write', 'Workers Scripts Write'), when the token's actual use is narrow. Flag any token granting 'Account: Memberships Write' or 'API Tokens Write' as privilege-escalation capable.",
+      "recommendation": "Scope tokens to the minimum specific zones/accounts and least-privilege permission groups required; split broad tokens into purpose-specific ones and avoid memberships/token-management permissions unless essential."
+    },
+    {
+      "id": "access-token-no-ip-restriction",
+      "category": "access",
+      "severity": "low",
+      "title": "High-privilege API token lacks IP allowlist",
+      "detect": "For tokens with write permissions, inspect condition.request_ip.in / not_in. If empty (no source-IP restriction) on a token used from fixed infrastructure (CI runners, servers), flag low.",
+      "recommendation": "Add a request_ip allowlist (CIDR) to tokens used from known networks so a leaked token cannot be used from arbitrary IPs."
+    },
+    {
+      "id": "access-global-api-key-usage",
+      "category": "access",
+      "severity": "high",
+      "title": "Legacy Global API Key in use instead of scoped tokens",
+      "detect": "Inspect audit logs and integration config for authentication via Global API Key (X-Auth-Key/X-Auth-Email) rather than scoped Bearer tokens. Flag any automation still using the Global API Key.",
+      "recommendation": "Migrate all integrations to scoped API tokens with least privilege and expirations; the Global API Key grants full account access and cannot be scoped."
+    },
+    {
+      "id": "access-stale-pending-invites",
+      "category": "access",
+      "severity": "low",
+      "title": "Stale pending member invitations",
+      "detect": "Among account members, flag entries with status=='pending' whose invitation is older than 14–30 days.",
+      "recommendation": "Resend or revoke long-pending invitations to keep the member roster clean and avoid lingering access grants."
+    },
+    {
+      "id": "access-audit-log-gaps",
+      "category": "access",
+      "severity": "info",
+      "title": "No recent administrative audit activity reviewed",
+      "detect": "Pull audit logs (GET /accounts/:id/audit_logs). Flag info if there are no log-review events / the report has not surfaced recent high-impact actions (role changes, token creation, DNS deletions, SSL mode changes) for operator attention. Always surface, not just flag: list recent sensitive actions.",
+      "recommendation": "Regularly review audit logs for privileged changes; export to SIEM and alert on token creation, membership changes, SSL/TLS mode downgrades, and bulk DNS edits."
+    },
+    {
+      "id": "perf-no-cache-rules",
+      "category": "performance",
+      "severity": "low",
+      "title": "No caching configuration beyond defaults",
+      "detect": "Check the 'http_request_cache_settings' phase entrypoint ruleset and legacy page rules for any cache-level/edge-TTL configuration. If empty and cache_level zone setting is 'bypass' or 'basic' for a static-content site, flag low.",
+      "recommendation": "Add Cache Rules to cache static assets aggressively (set edge cache TTL, cache eligible HTML where safe) to reduce origin load and latency."
+    },
+    {
+      "id": "perf-cache-level-bypass",
+      "category": "performance",
+      "severity": "low",
+      "title": "Cache Level set to Bypass globally",
+      "detect": "Read zone setting id=='cache_level'. If value=='bypass' at the zone level (everything skips cache), flag low — likely a misconfiguration for any cacheable site.",
+      "recommendation": "Set cache_level to 'aggressive' (or 'standard') and use targeted Cache Rules for paths that must bypass, instead of disabling cache globally."
+    },
+    {
+      "id": "perf-brotli-off",
+      "category": "performance",
+      "severity": "info",
+      "title": "Brotli compression disabled",
+      "detect": "Read zone setting id=='brotli'. If value=='off', flag info.",
+      "recommendation": "Enable Brotli for better text-asset compression than gzip, improving transfer size and load time."
+    },
+    {
+      "id": "perf-no-tiered-cache",
+      "category": "performance",
+      "severity": "info",
+      "title": "Tiered Cache / Argo Smart Routing not enabled",
+      "detect": "Check Tiered Cache setting (argo/tiered_cache_smart_topology) and Argo Smart Routing status. If both off on a high-traffic zone, flag info.",
+      "recommendation": "Enable Tiered Cache (free) to improve cache hit ratio and reduce origin load; consider Argo Smart Routing for latency-sensitive dynamic traffic."
+    },
+    {
+      "id": "perf-http2-http3-off",
+      "category": "performance",
+      "severity": "info",
+      "title": "HTTP/2 or HTTP/3 disabled",
+      "detect": "Read zone settings id=='http2' and id=='http3'. Flag info if either =='off'. Also check '0rtt' (Early Hints/0-RTT) for additional latency wins.",
+      "recommendation": "Enable HTTP/2 and HTTP/3 for multiplexing and lower-latency QUIC connections; enable Early Hints where supported."
+    },
+    {
+      "id": "perf-development-mode-left-on",
+      "category": "performance",
+      "severity": "medium",
+      "title": "Development Mode left enabled",
+      "detect": "Read zone setting id=='development_mode'. If value=='on' (time_remaining>0), flag — caching is bypassed and origin is fully exposed to load. Development Mode auto-expires after 3 hours, so a persistent 'on' signals it was just toggled or repeatedly re-enabled.",
+      "recommendation": "Turn off Development Mode after debugging; it disables edge caching and increases origin load and latency."
+    },
+    {
+      "id": "cost-approaching-dns-record-limit",
+      "category": "cost",
+      "severity": "low",
+      "title": "Zone approaching DNS record count limit",
+      "detect": "Count DNS records per zone and compare to the plan limit (Free/Pro/Business have per-zone DNS record caps). Flag low at >80% of the limit, medium at >95%.",
+      "recommendation": "Audit and remove stale records, or upgrade the plan / consolidate zones before hitting the cap blocks new record creation."
+    },
+    {
+      "id": "cost-approaching-page-rules-limit",
+      "category": "cost",
+      "severity": "low",
+      "title": "Page Rules quota nearly exhausted",
+      "detect": "Count active page rules vs the plan quota (Free=3, Pro=20, Business=50, etc.). Flag at >=quota or within 1–2 of the cap. Also flag heavy page-rule usage that should migrate to modern Rules (Cache Rules, Redirect Rules, Configuration Rules).",
+      "recommendation": "Migrate page rules to the newer Rules products (which have higher limits and better targeting) and free up the page-rule quota; upgrade plan if genuinely needed."
+    },
+    {
+      "id": "cost-workers-near-limits",
+      "category": "cost",
+      "severity": "info",
+      "title": "Workers usage approaching plan limits",
+      "detect": "From Workers list and analytics, compare request volume / CPU to the plan tier (Free daily request cap, paid included usage). Flag info when sustained usage trends toward the included quota or the free daily limit is being hit (visible as 1027 errors in logs).",
+      "recommendation": "Move high-traffic Workers to the paid Workers plan or optimize invocation/CPU; monitor for daily-limit throttling on the free tier."
+    },
+    {
+      "id": "hygiene-zone-not-active",
+      "category": "hygiene",
+      "severity": "medium",
+      "title": "Zone status is not active (pending/moved/deactivated)",
+      "detect": "For each zone read status. Flag if status in {'pending','initializing','moved','deactivated','deleted'} — Cloudflare is not fully authoritative/serving. Cross-check name_servers vs original_name_servers for incomplete nameserver delegation.",
+      "recommendation": "Complete nameserver delegation at the registrar so the zone becomes 'active', or remove zones that are no longer in use to reduce clutter and accidental exposure."
+    },
+    {
+      "id": "hygiene-paused-zone",
+      "category": "hygiene",
+      "severity": "high",
+      "title": "Zone is paused (Cloudflare bypassed)",
+      "detect": "For each zone read the 'paused' flag (and/or zone setting). If paused==true, all proxying/security/caching is bypassed and traffic goes straight to origin. Flag high for any production zone.",
+      "recommendation": "Unpause the zone so WAF, TLS termination, and caching apply; investigate why it was paused (often a debugging step left enabled)."
+    },
+    {
+      "id": "hygiene-orphaned-zone-no-records",
+      "category": "hygiene",
+      "severity": "low",
+      "title": "Active zone with no meaningful DNS records",
+      "detect": "Zone status=='active' but the record set is empty or contains only default/placeholder records (e.g. only NS, or a single parked A). Flag low as a likely orphaned/forgotten domain.",
+      "recommendation": "Remove unused zones or document their purpose; orphaned active zones are spoofing/typosquat liabilities and consume account quota."
+    },
+    {
+      "id": "hygiene-mixed-proxy-status-www-apex",
+      "category": "hygiene",
+      "severity": "low",
+      "title": "Inconsistent proxy status between apex and www",
+      "detect": "Compare proxied flags for apex ('@') and 'www' web records. If one is proxied and the other is grey-clouded, flag low — leads to inconsistent TLS/WAF/caching behavior and possible redirect issues.",
+      "recommendation": "Make apex and www consistently proxied (orange cloud) and add a redirect rule to canonicalize to the preferred host."
+    },
+    {
+      "id": "hygiene-underscore-service-records-proxied",
+      "category": "hygiene",
+      "severity": "low",
+      "title": "Service/verification records incorrectly proxied or malformed",
+      "detect": "Flag underscore-prefixed records (_dmarc, _acme-challenge, _domainkey, SRV, _mta-sts, TLSA) or domain-verification TXT that are set proxied (these must be DNS-only), or duplicated/expired ACME challenge TXT left over after issuance.",
+      "recommendation": "Keep verification/service records DNS-only and remove stale _acme-challenge and one-time verification TXT records after they have served their purpose."
+    }
+  ]
+}

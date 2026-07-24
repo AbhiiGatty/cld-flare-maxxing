@@ -25,7 +25,7 @@ const action = 'social-desk-provision'
 const databaseName = String(args.database || '')
 const domain = String(args.domain || '').toLowerCase()
 const appName = String(args.name || 'Social Desk')
-loadEnv(join(DIRS.root, '.env'))
+loadEnv(DIRS.env)
 const emails = String(args.emails || process.env.SOCIAL_DESK_ALLOWED_EMAILS || '')
   .split(',')
   .map((email) => email.trim().toLowerCase())

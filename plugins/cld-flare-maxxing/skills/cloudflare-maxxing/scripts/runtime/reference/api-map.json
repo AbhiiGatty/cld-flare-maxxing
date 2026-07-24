@@ -1,0 +1,271 @@
+{
+  "generatedAt": "2026-06-17",
+  "source": "cf-cc-research workflow (4 agents, cloudflare-docs + web search)",
+  "endpoints": [
+    {
+      "resource": "accounts",
+      "scope": "user",
+      "method": "GET",
+      "path": "/accounts",
+      "paginated": true,
+      "notes": "Account Settings Read (or any token with account membership). Lists accounts the token/user can access. Paginates via page & per_page."
+    },
+    {
+      "resource": "accounts",
+      "scope": "account",
+      "method": "GET",
+      "path": "/accounts/{account_id}",
+      "paginated": false,
+      "notes": "Account Settings Read. Returns account name, settings (e.g. enforce_twofactor), type."
+    },
+    {
+      "resource": "account_members",
+      "scope": "account",
+      "method": "GET",
+      "path": "/accounts/{account_id}/members",
+      "paginated": true,
+      "notes": "Account: Account Membership Read (a.k.a. Members Read). Each member includes user email, status, and assigned roles/policies. Paginates."
+    },
+    {
+      "resource": "account_roles",
+      "scope": "account",
+      "method": "GET",
+      "path": "/accounts/{account_id}/roles",
+      "paginated": true,
+      "notes": "Account Settings Read. Lists roles available in the account (id, name, permissions) for resolving member role refs. Paginates. Get one: GET /accounts/{account_id}/roles/{role_id}."
+    },
+    {
+      "resource": "subscriptions",
+      "scope": "account",
+      "method": "GET",
+      "path": "/accounts/{account_id}/subscriptions",
+      "paginated": false,
+      "notes": "Account: Billing Read (Subscriptions). Returns account-level subscriptions/billing rate plans. Zone-level plan also visible via zone.plan in GET /zones/{zone_id}. User-level: GET /user/subscriptions."
+    },
+    {
+      "resource": "user",
+      "scope": "user",
+      "method": "GET",
+      "path": "/user",
+      "paginated": false,
+      "notes": "User Details Read. Only works with an API token tied to a user (not an Account-Owned token). Returns email, id, 2FA status, etc."
+    },
+    {
+      "resource": "user_tokens",
+      "scope": "user",
+      "method": "GET",
+      "path": "/user/tokens",
+      "paginated": true,
+      "notes": "User API Tokens Read. Returns token metadata only (id, name, status, policies, last_used_on, expires_on) — never the secret value. Paginates. Verify a token: GET /user/tokens/verify."
+    },
+    {
+      "resource": "zones",
+      "scope": "user",
+      "method": "GET",
+      "path": "/zones",
+      "paginated": true,
+      "notes": "Zone Read. Filter to one account with ?account.id={account_id}. Each zone includes id, name, status, plan, name_servers, account ref. Paginates (page, per_page up to 50)."
+    },
+    {
+      "resource": "zones",
+      "scope": "zone",
+      "method": "GET",
+      "path": "/zones/{zone_id}",
+      "paginated": false,
+      "notes": "Zone Read. Full detail for a single zone including plan/billing tier and original/vanity name servers."
+    },
+    {
+      "resource": "dns_records",
+      "scope": "zone",
+      "method": "GET",
+      "path": "/zones/{zone_id}/dns_records",
+      "paginated": true,
+      "notes": "DNS Read (Zone: DNS Read). Lists all DNS records. Paginates (page, per_page up to 100, or use cursor). For account-level internal DNS use the views API."
+    },
+    {
+      "resource": "zone_settings",
+      "scope": "zone",
+      "method": "GET",
+      "path": "/zones/{zone_id}/settings",
+      "paginated": false,
+      "notes": "Zone Settings Read. Returns ALL zone settings in one array (ssl, min_tls_version, always_use_https, http2/3, brotli, security_level, browser_check, etc.). Single setting: GET /zones/{zone_id}/settings/{setting_id}. Not paginated."
+    },
+    {
+      "resource": "ssl_certificate_packs",
+      "scope": "zone",
+      "method": "GET",
+      "path": "/zones/{zone_id}/ssl/certificate_packs",
+      "paginated": true,
+      "notes": "SSL and Certificates Read. Lists edge certificate packs (universal/advanced/custom). Add ?status=all to include non-active. Paginates."
+    },
+    {
+      "resource": "zone_settings",
+      "scope": "zone",
+      "method": "GET",
+      "path": "/zones/{zone_id}/settings/ssl",
+      "paginated": false,
+      "notes": "Zone Settings Read. SSL/TLS encryption mode (off | flexible | full | strict). Recommended/encrypt-mode detail: GET /zones/{zone_id}/settings/ssl_recommender. Also see /zones/{zone_id}/settings/min_tls_version."
+    },
+    {
+      "resource": "dnssec",
+      "scope": "zone",
+      "method": "GET",
+      "path": "/zones/{zone_id}/dnssec",
+      "paginated": false,
+      "notes": "DNS Read (DNSSEC). Returns DNSSEC status (active/pending/disabled), DS record, DNSKEY, algorithm, multi-signer flag. Not paginated."
+    },
+    {
+      "resource": "firewall_rulesets",
+      "scope": "zone",
+      "method": "GET",
+      "path": "/zones/{zone_id}/rulesets/phases/http_request_firewall_custom/entrypoint",
+      "paginated": false,
+      "notes": "Verified via ruleset-engine docs. New WAF engine: zone custom firewall rules entry point ruleset (includes the rules array). Token: Zone WAF Read (or Account Filter Lists/Firewall). Not paginated — one ruleset object with rules[]."
+    },
+    {
+      "resource": "firewall_rulesets",
+      "scope": "zone",
+      "method": "GET",
+      "path": "/zones/{zone_id}/rulesets/phases/http_ratelimit/entrypoint",
+      "paginated": false,
+      "notes": "Verified via ruleset-engine docs. Rate limiting rules entry point ruleset (new engine). Phase name is http_ratelimit. Token: Zone WAF Read / Rate Limiting Read. Not paginated."
+    },
+    {
+      "resource": "firewall_rulesets",
+      "scope": "zone",
+      "method": "GET",
+      "path": "/zones/{zone_id}/rulesets",
+      "paginated": true,
+      "notes": "Verified. Lists ALL rulesets in a zone (every phase: managed deployment, custom, ratelimit, transform, etc.). Use to discover phases/ids, then fetch each with GET /zones/{zone_id}/rulesets/{ruleset_id}. Token: Zone WAF Read. Paginates."
+    },
+    {
+      "resource": "firewall_rulesets",
+      "scope": "zone",
+      "method": "GET",
+      "path": "/zones/{zone_id}/rulesets/{ruleset_id}",
+      "paginated": false,
+      "notes": "Verified. Fetch a single ruleset (and its rules[]) by id — used to expand managed/custom rulesets discovered from the list. Token: Zone WAF Read."
+    },
+    {
+      "resource": "firewall_rulesets",
+      "scope": "zone",
+      "method": "GET",
+      "path": "/zones/{zone_id}/rulesets/phases/http_request_firewall_managed/entrypoint",
+      "paginated": false,
+      "notes": "Verified pattern. Entry point ruleset that DEPLOYS Cloudflare Managed Rulesets / OWASP at zone level (each rule references a managed ruleset id + overrides). Token: Zone WAF Read."
+    },
+    {
+      "resource": "legacy_firewall_rules",
+      "scope": "zone",
+      "method": "GET",
+      "path": "/zones/{zone_id}/firewall/rules",
+      "paginated": true,
+      "notes": "Zone Firewall Services Read. DEPRECATED legacy firewall rules (paired with /zones/{zone_id}/filters). Still readable for migration/audit; new deployments use rulesets. Paginates."
+    },
+    {
+      "resource": "legacy_firewall_rules",
+      "scope": "zone",
+      "method": "GET",
+      "path": "/zones/{zone_id}/filters",
+      "paginated": true,
+      "notes": "Zone Firewall Services Read. Legacy filter expressions referenced by legacy firewall rules. DEPRECATED. Paginates."
+    },
+    {
+      "resource": "page_rules",
+      "scope": "zone",
+      "method": "GET",
+      "path": "/zones/{zone_id}/pagerules",
+      "paginated": false,
+      "notes": "Page Rules Read (Zone). Legacy Page Rules. Returns array of rules with targets/actions/priority/status. Supports order/direction/match query params; effectively a single page (not cursor/page paginated)."
+    },
+    {
+      "resource": "cache_rules",
+      "scope": "zone",
+      "method": "GET",
+      "path": "/zones/{zone_id}/rulesets/phases/http_request_cache_settings/entrypoint",
+      "paginated": false,
+      "notes": "Cache Rules live in the ruleset engine. Phase = http_request_cache_settings entry point ruleset. Token: Zone Cache Settings Read / Cache Rules. Not paginated (rules[] inside one ruleset)."
+    },
+    {
+      "resource": "workers_routes",
+      "scope": "zone",
+      "method": "GET",
+      "path": "/zones/{zone_id}/workers/routes",
+      "paginated": false,
+      "notes": "Verified via Workers Routes API docs. Workers Routes Read (Zone). Returns pattern -> script mappings for the zone. Returns full list (not cursor paginated)."
+    },
+    {
+      "resource": "workers_scripts",
+      "scope": "account",
+      "method": "GET",
+      "path": "/accounts/{account_id}/workers/scripts",
+      "paginated": false,
+      "notes": "Workers Scripts Read (Account). Lists deployed Worker scripts with metadata. Per-script settings: GET /accounts/{account_id}/workers/scripts/{script_name}/settings. Returns full list."
+    },
+    {
+      "resource": "workers_scripts",
+      "scope": "account",
+      "method": "GET",
+      "path": "/accounts/{account_id}/workers/subdomain",
+      "paginated": false,
+      "notes": "Workers Scripts Read. Returns the account's workers.dev subdomain. Per-script enablement: GET /accounts/{account_id}/workers/scripts/{script_name}/subdomain. Not paginated."
+    },
+    {
+      "resource": "workers_scripts",
+      "scope": "account",
+      "method": "GET",
+      "path": "/accounts/{account_id}/workers/scripts/{script_name}/schedules",
+      "paginated": false,
+      "notes": "Workers Scripts Read. Cron triggers (schedules) for a Worker. Iterate per script from the scripts list. Not paginated."
+    },
+    {
+      "resource": "kv_namespaces",
+      "scope": "account",
+      "method": "GET",
+      "path": "/accounts/{account_id}/storage/kv/namespaces",
+      "paginated": true,
+      "notes": "Workers KV Storage Read. Lists KV namespaces (id, title). Paginates (page, per_page). Keys per namespace: GET .../namespaces/{namespace_id}/keys."
+    },
+    {
+      "resource": "r2_buckets",
+      "scope": "account",
+      "method": "GET",
+      "path": "/accounts/{account_id}/r2/buckets",
+      "paginated": true,
+      "notes": "Workers R2 Storage Read. Lists R2 buckets (name, creation_date, location). Cursor-paginated (?cursor=, per_page)."
+    },
+    {
+      "resource": "d1_databases",
+      "scope": "account",
+      "method": "GET",
+      "path": "/accounts/{account_id}/d1/database",
+      "paginated": true,
+      "notes": "D1 Read (Account). Lists D1 databases (uuid, name, version). Paginates (page, per_page). Note singular 'database' in the path."
+    },
+    {
+      "resource": "queues",
+      "scope": "account",
+      "method": "GET",
+      "path": "/accounts/{account_id}/queues",
+      "paginated": true,
+      "notes": "Workers Queues Read (Account: Queues Read). Lists queues with producers/consumers. Paginates (page, per_page)."
+    },
+    {
+      "resource": "pages_projects",
+      "scope": "account",
+      "method": "GET",
+      "path": "/accounts/{account_id}/pages/projects",
+      "paginated": true,
+      "notes": "Pages Read (Account: Cloudflare Pages Read). Lists Pages projects with build config & domains. Paginates."
+    },
+    {
+      "resource": "audit_logs",
+      "scope": "account",
+      "method": "GET",
+      "path": "/accounts/{account_id}/logs/audit",
+      "paginated": true,
+      "notes": "CURRENT endpoint (Audit Logs v2, GA path), verified in Cloudflare changelog 2025-03-27 + 2026 updates. NOT /audit_logs. Token: Account Audit Logs Read (Account Settings Read). Required filters since & before (RFC3339). Each entry includes actor (id/email/type), action, resource, method, interface (API/Dashboard), ray id — use for change attribution. Cursor-paginated. (Org-level equivalent: GET /organizations/{organization_id}/logs/audit. Legacy v1 used /accounts/{account_id}/audit_logs and is being retired.)"
+    }
+  ],
+  "securityEventsGraphQL": "query RecentFirewallEvents($zoneTag: string!, $start: Time!, $end: Time!) {\n  viewer {\n    zones(filter: { zoneTag: $zoneTag }) {\n      firewallEventsAdaptive(\n        filter: { datetime_geq: $start, datetime_leq: $end }\n        limit: 100\n        orderBy: [datetime_DESC]\n      ) {\n        datetime\n        action\n        source\n        ruleId\n        rayName\n        clientIP\n        clientASNDescription\n        clientCountryName\n        clientRequestHTTPHost\n        clientRequestPath\n        clientRequestHTTPMethodName\n        userAgent\n      }\n    }\n  }\n}\n\n# POST https://api.cloudflare.com/client/v4/graphql  (Bearer token: Account Analytics Read)\n# variables: { \"zoneTag\": \"<ZONE_ID>\", \"start\": \"2026-06-16T00:00:00Z\", \"end\": \"2026-06-17T00:00:00Z\" }\n# To aggregate counts by action+source instead of raw events, use the firewallEventsAdaptiveGroups\n# dataset: firewallEventsAdaptiveGroups(filter: {...}, limit: 100) { count dimensions { action source clientRequestHTTPHost } }"
+}

@@ -49,7 +49,7 @@ if (!/^[a-zA-Z0-9][a-zA-Z0-9._/-]*$/.test(branch) || branch.includes('..')) {
   process.exit(1)
 }
 
-loadEnv(join(DIRS.root, '.env'))
+loadEnv(DIRS.env)
 const read = makeClient({ mode: 'read' })
 const accountId = await resolveAccountId(read)
 

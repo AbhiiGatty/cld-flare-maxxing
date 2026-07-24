@@ -1,0 +1,20 @@
+{
+  "description": "Block ad-hoc destructive Cloudflare calls and deletion of Cloudflare Maxxing state.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|mcp__cloudflare__execute",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PLUGIN_ROOT}/hooks/guard.mjs"
+            ],
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
