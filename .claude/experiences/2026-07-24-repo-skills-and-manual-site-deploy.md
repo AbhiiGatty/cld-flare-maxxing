@@ -23,6 +23,10 @@ build or deploy `site/`. The Pages upload preflight was fixed to fail closed, an
 guarded action can turn off Git-triggered production and preview deployments before a manual
 upload.
 
+The "repository as control center" part was superseded later the same day by
+[2026-07-24-portable-plugin-first-architecture.md](2026-07-24-portable-plugin-first-architecture.md).
+The website isolation and guarded local deployment decision still stands.
+
 **Lesson:** A project website can explain an agent-first repository without becoming part of
 the product's install or execution path. Keep its build and deployment entry points explicit,
 maintainer-only, and absent from routine scripts.

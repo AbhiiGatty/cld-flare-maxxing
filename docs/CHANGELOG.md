@@ -3,11 +3,24 @@
 This file records framework releases. Local Cloudflare account activity belongs in the
 gitignored `reports/actions-audit.log`, not in the public changelog.
 
-## Unreleased
+## v1.1.0 - 2026-07-24 - Portable plugin release
+
+### Added
+
+- Added installable Claude Code and Codex plugin manifests and repository marketplaces.
+- Added a self-contained `cloudflare-maxxing` skill with its scripts, reference catalog,
+  dashboard source, and allowlisted guarded actions.
+- Added a portable runner that works from any host project.
+- Added read-only pull-request CI for tests, dependency audits, and the dashboard build.
 
 ### Changed
 
-- Made the normal Claude Code and Codex path explicitly read-only and install-free.
+- Made plugin installation the normal user path. Cloning the repository is now a contributor
+  workflow.
+- Namespaced portable credentials and generated state under the host project's
+  `.cloudflare-maxxing/` directory.
+- Kept the host project's `.env`, dependencies, source, and deployment commands outside the
+  portable runtime.
 - Reduced optional Cloudflare MCP configuration to the API and documentation servers using
   current Streamable HTTP endpoints.
 - Made the static website and its maintainer-only deployment path separate from user setup.

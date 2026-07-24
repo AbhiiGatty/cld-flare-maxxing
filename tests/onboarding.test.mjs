@@ -35,16 +35,19 @@ test('optional MCP configuration uses only current low-overhead servers', async 
   }
 })
 
-test('onboarding starts read-only and keeps edit access optional', async () => {
+test('onboarding is plugin-first, read-only, and host-project isolated', async () => {
   const readme = await text('../README.md')
   const tokenSetup = await text('../docs/TOKEN-SETUP.md')
   const claude = await text('../CLAUDE.md')
 
-  assert.match(readme, /Do not create an edit token/)
-  assert.match(readme, /do not need to run `npm install`/)
+  assert.match(readme, /create an edit token/)
+  assert.match(readme, /plugin marketplace add AbhiiGatty\/cld-flare-maxxing/)
+  assert.match(readme, /<your-project>\/\.cloudflare-maxxing\//)
+  assert.match(readme, /does not use that project's\s+`\.env`/)
   assert.doesNotMatch(readme, /two Cloudflare API tokens it needs/i)
-  assert.match(tokenSetup, /Start with \*\*one read-only token\*\*/)
-  assert.match(tokenSetup, /second token is optional/)
+  assert.match(tokenSetup, /Start with one read-only token/)
+  assert.match(tokenSetup, /Optional edit token/)
+  assert.match(tokenSetup, /\.cloudflare-maxxing\/\.env\.cloudflare/)
   assert.match(claude, /^# Claude Code layer[\s\S]*@AGENTS\.md/)
   assert.doesNotMatch(claude, /caveman/i)
   assert.ok(Buffer.byteLength(claude) < 5000, 'CLAUDE.md duplicates too much shared guidance')

@@ -1,0 +1,307 @@
+{
+  "generatedAt": "2026-06-17",
+  "source": "cf-cc-research workflow (4 agents, cloudflare-docs + web search)",
+  "limits": [
+    {
+      "metric": "Requests per day",
+      "area": "Workers",
+      "free": "100,000 / day",
+      "paid": "Unlimited",
+      "notes": "Free plan resets daily at UTC midnight; exceeding returns 1015 errors. Paid = no daily cap."
+    },
+    {
+      "metric": "Requests per minute (burst)",
+      "area": "Workers",
+      "free": "1,000 / min",
+      "paid": "No limit",
+      "notes": "Free plan also has a per-minute burst cap of 1,000 requests."
+    },
+    {
+      "metric": "Subrequests per invocation (external/fetch)",
+      "area": "Workers",
+      "free": "50 / request",
+      "paid": "10,000 default (configurable up to 10,000,000)",
+      "notes": "As of Feb 2026 the old 1,000 cap was removed for paid. Set via wrangler limits.subrequests."
+    },
+    {
+      "metric": "Subrequests to Cloudflare services per invocation",
+      "area": "Workers",
+      "free": "1,000 / request",
+      "paid": "Included in the 10,000 / configurable subrequest limit",
+      "notes": "Free plan: requests to KV/R2/D1/etc capped separately at 1,000."
+    },
+    {
+      "metric": "CPU time per invocation",
+      "area": "Workers",
+      "free": "10 ms",
+      "paid": "30 s default, configurable up to 5 min (300,000 ms)",
+      "notes": "CPU = active processing time only, not I/O wait. Set via wrangler limits.cpu_ms. Avg Worker ~2.2 ms."
+    },
+    {
+      "metric": "Worker bundle/script size (after gzip)",
+      "area": "Workers",
+      "free": "3 MB",
+      "paid": "10 MB",
+      "notes": "Compressed size of the deployed script + assets."
+    },
+    {
+      "metric": "Number of Workers (scripts) per account",
+      "area": "Workers",
+      "free": "100",
+      "paid": "500",
+      "notes": "Shared with Workflow script count."
+    },
+    {
+      "metric": "Environment variables per Worker",
+      "area": "Workers",
+      "free": "64",
+      "paid": "128",
+      "notes": "Each variable value max 5 KB on both plans."
+    },
+    {
+      "metric": "Memory per Worker isolate",
+      "area": "Workers",
+      "free": "128 MB",
+      "paid": "128 MB",
+      "notes": "Same on both plans."
+    },
+    {
+      "metric": "KV reads per day",
+      "area": "KV",
+      "free": "100,000 / day",
+      "paid": "Unlimited (billed per operation)",
+      "notes": "Free daily cap resets at UTC midnight."
+    },
+    {
+      "metric": "KV writes per day (to distinct keys)",
+      "area": "KV",
+      "free": "1,000 / day",
+      "paid": "Unlimited (billed per operation)",
+      "notes": "Writes to the same key are capped at 1/second on both plans."
+    },
+    {
+      "metric": "KV deletes per day",
+      "area": "KV",
+      "free": "1,000 / day",
+      "paid": "Unlimited (billed per operation)",
+      "notes": "Deletes count against the same daily write allowance on Free."
+    },
+    {
+      "metric": "KV lists per day",
+      "area": "KV",
+      "free": "1,000 / day",
+      "paid": "Unlimited (billed per operation)",
+      "notes": "List operations counted with the daily write/list class on Free."
+    },
+    {
+      "metric": "KV total stored data",
+      "area": "KV",
+      "free": "1 GB (per account and per namespace)",
+      "paid": "Unlimited",
+      "notes": "Free plan storage cap is 1 GB total."
+    },
+    {
+      "metric": "KV key size",
+      "area": "KV",
+      "free": "512 bytes",
+      "paid": "512 bytes",
+      "notes": "Same on both plans."
+    },
+    {
+      "metric": "KV value size",
+      "area": "KV",
+      "free": "25 MiB",
+      "paid": "25 MiB",
+      "notes": "Same on both plans."
+    },
+    {
+      "metric": "KV key metadata size",
+      "area": "KV",
+      "free": "1,024 bytes",
+      "paid": "1,024 bytes",
+      "notes": "Per-key associated metadata."
+    },
+    {
+      "metric": "KV namespaces per account",
+      "area": "KV",
+      "free": "1,000",
+      "paid": "1,000",
+      "notes": "Raised from 200 to 1,000 (Jan 2025) for both Free and Paid."
+    },
+    {
+      "metric": "R2 storage (free allowance)",
+      "area": "R2",
+      "free": "10 GB-month / month",
+      "paid": "10 GB-month free, then $0.015 / GB-month",
+      "notes": "Free tier applies to Standard storage only. Storage per bucket is unlimited."
+    },
+    {
+      "metric": "R2 Class A operations (writes/lists)",
+      "area": "R2",
+      "free": "1,000,000 / month",
+      "paid": "1M free, then $4.50 / million",
+      "notes": "Class A = PutObject, ListObjects, CopyObject, etc."
+    },
+    {
+      "metric": "R2 Class B operations (reads)",
+      "area": "R2",
+      "free": "10,000,000 / month",
+      "paid": "10M free, then $0.36 / million",
+      "notes": "Class B = GetObject, HeadObject, etc."
+    },
+    {
+      "metric": "R2 egress (data transfer to internet)",
+      "area": "R2",
+      "free": "Free (no egress fees)",
+      "paid": "Free (no egress fees)",
+      "notes": "Zero egress fees is R2's core differentiator vs S3."
+    },
+    {
+      "metric": "R2 max object size",
+      "area": "R2",
+      "free": "~4.995 TiB / object",
+      "paid": "~4.995 TiB / object",
+      "notes": "5 TiB minus a 5 GiB reduction. Single-part upload limited to 5 GiB; max 10,000 parts."
+    },
+    {
+      "metric": "R2 buckets per account",
+      "area": "R2",
+      "free": "1,000,000",
+      "paid": "1,000,000",
+      "notes": "Object count per bucket is unlimited."
+    },
+    {
+      "metric": "D1 number of databases",
+      "area": "D1",
+      "free": "10",
+      "paid": "50,000",
+      "notes": "Per account."
+    },
+    {
+      "metric": "D1 maximum database size (per DB)",
+      "area": "D1",
+      "free": "500 MB",
+      "paid": "10 GB",
+      "notes": "Per individual database."
+    },
+    {
+      "metric": "D1 total storage per account",
+      "area": "D1",
+      "free": "5 GB",
+      "paid": "1 TB (first 5 GB free, then $0.75 / GB-month)",
+      "notes": "Aggregate across all databases."
+    },
+    {
+      "metric": "D1 rows read per day",
+      "area": "D1",
+      "free": "5,000,000 / day",
+      "paid": "First 25 billion / month included, then $0.001 / million",
+      "notes": "Free is a daily cap; Paid is a monthly included allowance."
+    },
+    {
+      "metric": "D1 rows written per day",
+      "area": "D1",
+      "free": "100,000 / day",
+      "paid": "First 50 million / month included, then $1.00 / million",
+      "notes": "Free is a daily cap; Paid is a monthly included allowance."
+    },
+    {
+      "metric": "D1 max columns per table",
+      "area": "D1",
+      "free": "100",
+      "paid": "100",
+      "notes": "Same on both plans. Rows per table unlimited (subject to storage)."
+    },
+    {
+      "metric": "D1 max SQL statement length",
+      "area": "D1",
+      "free": "100,000 bytes (100 KB)",
+      "paid": "100,000 bytes (100 KB)",
+      "notes": "Per statement."
+    },
+    {
+      "metric": "Pages builds per month",
+      "area": "Pages",
+      "free": "500",
+      "paid": "Pro 5,000; Business 20,000",
+      "notes": "Build timeout 20 min on all plans."
+    },
+    {
+      "metric": "Pages concurrent builds",
+      "area": "Pages",
+      "free": "1",
+      "paid": "Pro 5; Business 20",
+      "notes": "Simultaneous build queue depth."
+    },
+    {
+      "metric": "Pages files per site",
+      "area": "Pages",
+      "free": "20,000",
+      "paid": "100,000 (set PAGES_WRANGLER_MAJOR_VERSION=4)",
+      "notes": "Paid raised to 100,000 in Jan 2026; Free stays 20,000. Max file size 25 MiB."
+    },
+    {
+      "metric": "Pages custom domains per project",
+      "area": "Pages",
+      "free": "100",
+      "paid": "Pro 250; Business 500; Enterprise 500+",
+      "notes": "Per project."
+    },
+    {
+      "metric": "Pages projects per account",
+      "area": "Pages",
+      "free": "100 (soft)",
+      "paid": "100 (soft)",
+      "notes": "Soft limit across all plans; can be raised on request."
+    },
+    {
+      "metric": "DNS records per zone",
+      "area": "DNS",
+      "free": "1,000 (zones created before 2024-09-01); 200 (zones created on/after 2024-09-01)",
+      "paid": "3,500 (Pro/Business)",
+      "notes": "Enterprise uses an account-level quota (default 1,000,000 records, public vs internal counted separately) instead of per-zone."
+    },
+    {
+      "metric": "Page Rules per zone",
+      "area": "Page Rules",
+      "free": "5",
+      "paid": "Pro 20; Business 50",
+      "notes": "Legacy Page Rules; Cloudflare steers new config to Rules (Configuration/Redirect/etc.). Enterprise 125+."
+    },
+    {
+      "metric": "WAF custom rules per zone",
+      "area": "WAF",
+      "free": "5",
+      "paid": "Pro 20; Business 100; Enterprise 1,000",
+      "notes": "Counts rules in the http_request_firewall_custom phase."
+    },
+    {
+      "metric": "Rate limiting rules per zone",
+      "area": "WAF / Rate Limiting",
+      "free": "1",
+      "paid": "Pro 2; Business 5; Enterprise (with app security / Advanced Rate Limiting) up to 100",
+      "notes": "Enterprise requires application security on contract; exact count is contract-dependent."
+    },
+    {
+      "metric": "Zones (domains) per account",
+      "area": "Account",
+      "free": "~1,000 (soft default)",
+      "paid": "~1,000 (soft default)",
+      "notes": "No documented hard cap; Cloudflare enforces a soft limit (commonly ~1,000) that can be raised via support. Effectively unlimited for most users."
+    },
+    {
+      "metric": "Email Routing rules per domain (zone)",
+      "area": "Email Routing",
+      "free": "200",
+      "paid": "200",
+      "notes": "Each rule maps one email pattern to one destination. Use a Worker forward() to fan out to multiple destinations."
+    },
+    {
+      "metric": "Email Routing destination addresses per account",
+      "area": "Email Routing",
+      "free": "200",
+      "paid": "200",
+      "notes": "Verified destinations shared across all domains in the account. Inbound message size cap 25 MiB."
+    }
+  ]
+}

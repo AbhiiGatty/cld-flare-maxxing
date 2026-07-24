@@ -1,88 +1,105 @@
-# Token setup (read first, edit only when needed)
+# Token setup
 
-Start with **one read-only token**. It handles setup, snapshots, reports, diffs, and the
-dashboard. Do not create an edit token during normal setup.
+Start with one read-only token. It handles setup, snapshots, reports, diffs, recommendations,
+and the dashboard. Do not create an edit token during normal setup.
 
-The second token is optional. Create it only when you have chosen a specific account change,
-reviewed its dry run, and are ready to use break-glass.
+Create tokens at
+[Cloudflare dashboard > My Profile > API Tokens](https://dash.cloudflare.com/profile/api-tokens).
 
-Create tokens at: **Cloudflare dashboard → My Profile → API Tokens → Create Token**
-(URL: https://dash.cloudflare.com/profile/api-tokens)
+## Read-only token
 
----
+Use Cloudflare's built-in **Read all resources** template. It grants the broad read coverage
+needed for a complete account snapshot without granting write access.
 
-## 1. Read-only token  →  `.env`  (`CF_READ_TOKEN`)
+If you prefer a custom token, grant these read permissions:
 
-**Easiest:** use the built-in template **“Read all resources.”** It grants read across the
-account and all zones — exactly what snapshots/reports need — and nothing can be mutated with it.
-
-If you prefer a custom token, grant these **Read** permissions:
-
-| Scope | Permissions (Read) |
+| Scope | Permissions |
 |---|---|
-| Account | Account Settings, Account Analytics, **Audit Logs**, Workers Scripts, Workers KV Storage, Workers R2 Storage, D1, Workers Queues, Cloudflare Pages, Account Rulesets, Billing |
+| Account | Account Settings, Account Analytics, Audit Logs, Workers Scripts, Workers KV Storage, Workers R2 Storage, D1, Workers Queues, Cloudflare Pages, Account Rulesets, Billing |
 | Zone | Zone, DNS, Zone Settings, SSL and Certificates, Firewall Services, Page Rules, Zone WAF, Cache Rules, Analytics, Workers Routes |
 | User | User Details, API Tokens, Memberships |
 
-- **Account Resources:** Include → your account.
-- **Zone Resources:** Include → All zones (from the account).
-- **Client IP / TTL:** optional. Recommend setting an expiry and rotating.
+Include the intended account and all zones you want inspected. An expiry and client-IP
+restriction are optional but useful.
 
-> Notes
-> - `/user`, `/user/tokens`, and member 2FA fields only resolve for a **user-scoped** token
->   (not an "Account-Owned" token). Use a user token for full coverage of the Resources tab.
-> - The snapshot **degrades gracefully**: any scope you omit just records an entry in
->   `snapshot.errors` and the rest still runs.
+Some user and token metadata is available only to a user-scoped token. If a permission is
+missing, the snapshot records that collector's error and continues.
 
-Then:
-```
-copy .env.example .env        # (PowerShell: Copy-Item .env.example .env)
-# edit .env → CF_READ_TOKEN=...   and optionally CF_ACCOUNT_ID=...
-npm run setup                 # verifies the token reaches the API
+### Plugin or skill install
+
+The agent creates:
+
+```text
+<host-project>/.cloudflare-maxxing/.env.cloudflare
 ```
 
----
+Add the token locally:
 
-## 2. Optional edit / break-glass token  →  `.env.break-glass`  (`CF_EDIT_TOKEN`)
+```dotenv
+CF_READ_TOKEN=replace_me
+# CF_ACCOUNT_ID=optional_account_id
+```
 
-Only needed when you intend to **change** the account. Keep it scoped tight and prefer to
-**delete `.env.break-glass` after use**.
+Never paste the token into chat. The host project's generic `.env` is unrelated and is not
+read by this tool.
 
-Grant **Edit** only for what you actually manage, e.g.:
+Then ask the agent to verify access, or run:
 
-| Scope | Permissions (Edit) |
+```bash
+node "<skill-path>/scripts/cf-maxxing.mjs" setup
+```
+
+### Repository maintainer workflow
+
+A contributor running the repository's root scripts uses the legacy root `.env` path:
+
+```powershell
+Copy-Item .env.example .env
+npm run setup
+```
+
+That path exists for developing and testing this repository. It is not used by an installed
+plugin or copied skill.
+
+## Optional edit token
+
+Create this token only after choosing a specific change and reviewing its dry run. Grant edit
+permission only for the named resource and prefer one specific zone over all zones.
+
+Common edit scopes are:
+
+| Scope | Permissions |
 |---|---|
 | Zone | DNS, Zone Settings, SSL and Certificates, Firewall Services, Zone WAF, Page Rules, Cache Purge, Workers Routes |
 | Account | Workers Scripts, Workers KV Storage, Workers R2 Storage, D1, Cloudflare Pages |
 
-- **Zone Resources:** prefer **specific zones** over "All zones."
-- Do **not** add `API Tokens: Edit` or `Memberships: Edit` unless you truly need them
-  (those enable privilege escalation).
-- Set a short expiry.
+Do not grant API Tokens: Edit or Memberships: Edit unless the approved change requires them.
+Use a short expiry and remove the local file after the change.
 
-Then, only at the moment of change:
-```
-copy .env.break-glass.example .env.break-glass
-# edit → CF_EDIT_TOKEN=...  and  CF_ALLOW_DESTRUCTIVE=YES_I_AM_SURE
-node scripts/actions/dns-create-record.mjs --zone=example.com --type=A --name=test --content=192.0.2.10   # dry-run
-# add --commit when you're sure
+For a plugin or skill install, create:
+
+```text
+<host-project>/.cloudflare-maxxing/.env.cloudflare.break-glass
 ```
 
-See `docs/SAFETY.md` for the full break-glass protocol and what's blocked.
+with:
 
----
+```dotenv
+CF_EDIT_TOKEN=replace_me
+CF_ALLOW_DESTRUCTIVE=YES_I_AM_SURE
+```
 
-## 3. Optional live MCP servers
+Run the action without `--commit`, state the exact change, and wait for explicit approval.
+Only then rerun it with `--commit`.
 
-`.mcp.json` contains Cloudflare's API Code Mode server and documentation server. They are
-optional and are not used by `npm run setup`, `npm run refresh`, reports, diffs, or the
-dashboard. The API server authenticates with **OAuth** the first time it is used.
+Repository maintainers use `.env.break-glass` at the repository root for the same guarded
+flow.
 
-If Cloudflare's OAuth consent screen offers a choice of permissions, pick read-only - this repo
-can't force that scope from its side. See `docs/SAFETY.md` for how `mcp__cloudflare__execute`
-(the one server here with no fixed tool list) is gated regardless of what the OAuth grant allows.
+Read [SAFETY.md](SAFETY.md) for the full protocol.
 
-Cloudflare also publishes an optional Skills plugin for hands-on Workers, D1, R2, and Durable
-Objects development. It complements this account-governance repository but is not required.
-Use [Cloudflare's current agent setup](https://developers.cloudflare.com/agent-setup/) for the
-latest install instructions.
+## Optional Cloudflare tools
+
+Cloudflare's documentation and API tools can complement this package. They are not required
+for setup, snapshots, reports, diffs, or the dashboard. Use
+[Cloudflare's current agent setup](https://developers.cloudflare.com/agent-setup/) rather
+than copying an old server list.

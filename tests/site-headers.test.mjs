@@ -17,3 +17,13 @@ test('landing page declares the public security headers', async () => {
   }
   assert.match(headers, /frame-ancestors 'none'/)
 })
+
+test('landing page get-started flow is plugin-first', async () => {
+  const page = await readFile(new URL('../site/index.html', import.meta.url), 'utf8')
+
+  assert.match(page, /claude plugin marketplace add/)
+  assert.match(page, /claude plugin install/)
+  assert.match(page, /\.cloudflare-maxxing\/\.env\.cloudflare/)
+  assert.doesNotMatch(page, /\$ git clone/)
+  assert.doesNotMatch(page, /\$ npm run setup/)
+})

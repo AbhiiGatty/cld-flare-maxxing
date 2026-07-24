@@ -1,0 +1,177 @@
+{
+  "generatedAt": "2026-06-17",
+  "source": "cf-cc-research workflow (4 agents, cloudflare-docs + web search)",
+  "betas": [
+    {
+      "name": "Dynamic Workers",
+      "area": "Workers",
+      "status": "open beta (Mar 24, 2026; all paid Workers users)",
+      "summary": "A Worker can spin up other Workers ('Dynamic Workers') at runtime in a sandboxed, millisecond-start environment to execute code on demand. Supports load(code) for one-shot execution and get(id, callback) for warm caching. Also underpins 'Code Mode' for LLM tool-calling.",
+      "whyEvaluate": "With ~9 Workers, you likely have a use case to run user- or AI-generated snippets, do on-the-fly data/file transformation, or build fast preview/playground flows without deploying a new Worker each time. It avoids the operational overhead of a separate sandbox while staying on infrastructure you already pay for.",
+      "fitSignals": "You're on a paid Workers plan; you have any feature that transforms files/data, runs templated logic, builds previews, or you're starting to wire up AI agents/tool-calling.",
+      "docsUrl": "https://developers.cloudflare.com/changelog/post/2026-03-24-dynamic-workers-open-beta/"
+    },
+    {
+      "name": "Flagship (native feature flags)",
+      "area": "Workers / Developer Platform",
+      "status": "public beta (May 26, 2026); API reference added Jun 10, 2026",
+      "summary": "Cloudflare's native feature-flag service. Evaluate flags directly from a Worker with no outbound HTTP call (env.FLAGS.getBooleanValue(...)), backed by KV + Durable Objects. Supports typed values, targeting rules, percentage rollouts, audit history, OpenFeature-compatible SDKs, and a full management API.",
+      "whyEvaluate": "Across 9 Workers + Pages you almost certainly want safe rollouts, kill-switches, and A/B gating. Flagship gives sub-ms in-Worker evaluation without adding a third-party SaaS (LaunchDarkly etc.) or extra latency, and it reuses KV/DO you already understand.",
+      "fitSignals": "Multiple Workers/Pages projects shipping changes; any desire for staged rollouts, canaries, or kill-switches; you already use KV.",
+      "docsUrl": "https://developers.cloudflare.com/flagship/get-started/"
+    },
+    {
+      "name": "Email Sending (Cloudflare Email Service)",
+      "area": "Email",
+      "status": "public beta (Apr 16, 2026); SMTP submission beta added Jun 8, 2026",
+      "summary": "Send transactional email directly from a Worker (env.EMAIL.send()), via REST API, or now via authenticated SMTP submission (smtp.mx.cloudflare.net:465). Supports HTML/plain text, attachments, inline images, custom headers, automatic DKIM/ARC signing, and shared dashboard logs. Joins Email Routing under the unified 'Cloudflare Email Service'.",
+      "whyEvaluate": "You already run Email Routing (receiving). This closes the loop with sending, so password resets, contact-form replies, marketing/website notifications, and app transactional mail can originate from your own domain via the same provider, with deliverability (SPF/DKIM/DMARC) handled by Cloudflare. Removes a separate SendGrid/Mailgun dependency.",
+      "fitSignals": "You use Email Routing; you have a marketing/website with contact forms or signups; any Worker that currently can't send outbound email or relies on a third-party mailer.",
+      "docsUrl": "https://developers.cloudflare.com/email-service/api/send-emails/"
+    },
+    {
+      "name": "D1 Read Replication (Sessions API)",
+      "area": "D1",
+      "status": "public beta (since Apr 10, 2025; still beta as of 2026)",
+      "summary": "D1 automatically maintains read replicas; using the Sessions API (env.DB.withSession(bookmark)) routes reads to the nearest replica with sequential consistency, and bookmarks preserve logical consistency across sessions. Replicas are auto-created/managed at no extra cost.",
+      "whyEvaluate": "If any of your Workers read from D1 on the request path, replication lowers read latency for geographically spread users and raises read throughput with a small code change. Low risk to adopt incrementally on read-heavy endpoints.",
+      "fitSignals": "You have a D1 database backing read-heavy endpoints (content, catalog, dashboards) and users in more than one region.",
+      "docsUrl": "https://developers.cloudflare.com/d1/best-practices/read-replication/"
+    },
+    {
+      "name": "Remote bindings for local development",
+      "area": "Workers (dev tooling)",
+      "status": "public beta (Jun 18, 2025; current)",
+      "summary": "Add experimental_remote: true to a binding in wrangler config to connect local `wrangler dev` / `vite dev` to deployed D1, KV, R2, and other resources, so you test local code against real data without deploying each iteration.",
+      "whyEvaluate": "With 9 Workers plus KV/R2/D1, faster, higher-fidelity local iteration directly reduces 'deploy-to-test' churn and bugs from emulator/real-data drift. Pure dev-time win, no production risk.",
+      "fitSignals": "You develop Workers locally and currently either deploy to test or fight local emulator differences against KV/R2/D1.",
+      "docsUrl": "https://developers.cloudflare.com/workers/development-testing/"
+    },
+    {
+      "name": "AutoRAG (AI Search) managed RAG pipelines",
+      "area": "AI / Workers AI",
+      "status": "open beta (since Apr 7, 2025; current)",
+      "summary": "Fully-managed retrieval-augmented generation: upload docs to R2 and AutoRAG handles embeddings, indexing (Vectorize), retrieval, and generation via a Workers binding or REST API. Continuously syncs the index with the R2 source; supports metadata filtering and configurable models/chunking.",
+      "whyEvaluate": "You already have R2 and a website/marketing presence. AutoRAG turns existing docs/content in R2 into an AI search or support assistant in minutes, reusing R2 + Workers AI + Vectorize without you wiring the pipeline. Strong low-effort way to add an 'ask our docs' feature.",
+      "fitSignals": "You store docs/content in R2; you have a marketing site or knowledge base; interest in an on-site AI assistant or semantic search.",
+      "docsUrl": "https://developers.cloudflare.com/ai-search/get-started/"
+    },
+    {
+      "name": "AI Gateway unified REST API + auto-retry + dynamic routing",
+      "area": "AI / Workers AI",
+      "status": "GA-but-new (REST API May 21, 2026; auto-retry Apr 2, 2026)",
+      "summary": "Call any model (OpenAI, Anthropic, Google, or Workers AI) through one unified API on api.cloudflare.com with shared logging, caching, rate limiting, guardrails, unified billing, gateway-level automatic retries (up to 5, configurable backoff), and Dynamic Routing for cross-provider failover.",
+      "whyEvaluate": "If any Worker calls an LLM, routing it through AI Gateway gives you caching (cost savings), centralized logs/limits, and resilience to provider outages with zero client changes. Unified billing also means no juggling per-provider keys.",
+      "fitSignals": "Any current or planned LLM calls from a Worker (chatbots, summarization, content generation for the marketing site, agents).",
+      "docsUrl": "https://developers.cloudflare.com/ai-gateway/usage/rest-api/"
+    },
+    {
+      "name": "Workers Observability: Logs, Query Builder, visualizations & exports",
+      "area": "Observability",
+      "status": "GA-but-new (Logs/Query Builder GA Apr 2025; dashboard refresh Feb 6, 2026)",
+      "summary": "Enable observability in wrangler (observability.enabled = true, logs.invocation_logs = true) to ingest/index/store all Worker logs for 7 days. The refreshed dashboard adds a Query Builder, account-wide log view, chart visualizations, JSON/CSV export, shareable event/trace URLs, and customizable columns.",
+      "whyEvaluate": "Across 9 Workers, a single account-level place to ask 'which paths throw 5XX', 'what's the P99 CPU', 'who are top callers' is high leverage for debugging and cost/perf tuning. It's a one-line config change per Worker.",
+      "fitSignals": "Multiple Workers in production; you currently lack centralized log search; any recurring error or latency you can't easily trace.",
+      "docsUrl": "https://developers.cloudflare.com/workers/observability/logs/workers-logs/"
+    },
+    {
+      "name": "Explicit Placement Hints / Smart Placement",
+      "area": "Workers",
+      "status": "GA-but-new (placement hints Jan 22, 2026)",
+      "summary": "Set placement.region (e.g. aws:us-east-1) in wrangler config to run a Worker in the Cloudflare data center closest to a backend in AWS/GCP/Azure, minimizing round-trip latency for Workers that make multiple hops. placement.host / placement.hostname probes locate single-homed origins not in those clouds.",
+      "whyEvaluate": "If any of your Workers make several sequential calls to an external database or API (not D1/KV/R2), placement can cut latency materially by co-locating compute near that backend. Config-only change.",
+      "fitSignals": "A Worker that does multiple round trips to an external/origin database or third-party API per request; noticeable backend latency.",
+      "docsUrl": "https://developers.cloudflare.com/workers/configuration/placement/"
+    },
+    {
+      "name": "Event Subscriptions (Queues) for platform events",
+      "area": "Workers / Queues / Storage",
+      "status": "GA-but-new (launched Aug 19, 2025; Workers Builds events Dec 2025/Jan 2026)",
+      "summary": "Subscribe to structured events from Cloudflare services and consume them via a Queue (Worker or HTTP pull). Sources include R2, Workers KV, Workers AI, Workers Builds, Vectorize, Super Slurper, and Workflows. E.g. trigger automation on r2 bucket.created, or notify Slack/Discord/email on build success/failure.",
+      "whyEvaluate": "Lets you build lightweight event-driven automation across the storage/build stack you already run, e.g. process files on R2 upload, or get Slack/email alerts when a Worker build fails, without polling. Templated deploy available for build notifications.",
+      "fitSignals": "You use R2/KV and Workers Builds; you'd benefit from upload-triggered processing or CI/CD build alerts.",
+      "docsUrl": "https://developers.cloudflare.com/queues/event-subscriptions/"
+    },
+    {
+      "name": "Internal DNS",
+      "area": "DNS / Zero Trust",
+      "status": "open beta (Mar 31, 2026) — Enterprise + Gateway only",
+      "summary": "Private/internal DNS zones bundled with Cloudflare Gateway, resolvable for devices on your Zero Trust network. In open beta for Enterprise customers with Zero Trust Enterprise or Gateway Enterprise.",
+      "whyEvaluate": "Relevant only if you adopt Zero Trust/Gateway at the Enterprise tier; for a small account this is likely out of reach today, but worth knowing if you plan to add internal-only hostnames for private services behind WARP.",
+      "fitSignals": "Enterprise plan with Gateway/Zero Trust and a need for private internal hostnames. NOT a fit for a Free/Pro account.",
+      "docsUrl": "https://developers.cloudflare.com/dns/internal-dns/"
+    },
+    {
+      "name": "Managed OAuth for Cloudflare Access",
+      "area": "Zero Trust / Access",
+      "status": "GA-but-new / opt-in (Mar 20, 2026)",
+      "summary": "Lets non-browser clients (CLIs, scripts, AI agents, SDKs) authenticate to Access-protected apps via a standard OAuth 2.0 authorization-code flow. Clients get a 401 with a WWW-Authenticate header pointing to Access OAuth discovery endpoints (RFC 8414/9728), instead of an un-completable 302 redirect. Default-on for new MCP server portals; opt-in for self-hosted apps.",
+      "whyEvaluate": "If you put an internal tool, staging site, or admin Worker behind Access, this enables programmatic/agent access without the old cloudflared access curl workaround. Cheap to enable per-application. Access has a free tier for small teams.",
+      "fitSignals": "You use (or could use) Cloudflare Access to protect an internal dashboard/admin route; you have CLIs, CI jobs, or AI agents that need to reach those apps.",
+      "docsUrl": "https://developers.cloudflare.com/cloudflare-one/access-controls/policies/"
+    },
+    {
+      "name": "Containers + Sandbox SDK",
+      "area": "Workers / Containers",
+      "status": "GA-but-new (GA Apr 13, 2026; many features just stabilized)",
+      "summary": "Run full Linux workloads (resource-intensive apps, other languages, CLI tools) alongside Workers, with active-CPU pricing (pay only for used cycles), Docker Hub image support, SSH debugging, and easy connections to Workers/bindings via hostnames. The Sandbox SDK provides isolated environments to run untrusted code with a TypeScript API.",
+      "whyEvaluate": "Gives you an escape hatch for the ~10% of tasks Workers can't do (heavy compute, a binary/CLI, a non-JS runtime) without leaving the platform or standing up a VM. Sandbox SDK is the safe way to run AI/user-generated code. Active-CPU pricing keeps small-scale costs low.",
+      "fitSignals": "Any task you currently can't run in a Worker (image/video processing, a CLI tool, Python/Go workload) or a need to execute untrusted code.",
+      "docsUrl": "https://developers.cloudflare.com/containers/"
+    },
+    {
+      "name": "R2 Data Catalog (managed Apache Iceberg) + R2 SQL",
+      "area": "R2 / Storage / Analytics",
+      "status": "open beta (catalog + R2 SQL; pricing announced May 2026, billing not yet enabled)",
+      "summary": "R2 Data Catalog is a managed Apache Iceberg REST catalog built into an R2 bucket, queryable by Spark, Snowflake, DuckDB, and Cloudflare's serverless R2 SQL engine. Recent additions: automatic snapshot expiration that removes orphaned data files, GraphQL analytics metrics, a dedicated dashboard, and R2 SQL JSON functions/CTEs/190+ functions. R2 SQL is ~$2.50/TB scanned (free tiers: 1 GB Free plan, 10 GB Paid).",
+      "whyEvaluate": "If you accumulate logs, events, or analytics data in R2, you can query it in place with SQL (no separate warehouse/ETL), or land Logpush/Pipelines output as Iceberg and analyze cheaply. Generous free tiers and not-yet-billed make it low-risk to pilot now.",
+      "fitSignals": "You store structured/log/event data in R2; you Logpush Worker or zone logs; interest in analytics without standing up BigQuery/Athena.",
+      "docsUrl": "https://developers.cloudflare.com/r2-sql/"
+    },
+    {
+      "name": "WAF leaked-credentials & continuously-improved managed rules",
+      "area": "WAF / Security",
+      "status": "GA-but-new (ongoing 2026 releases; leaked-credentials checks, content scanning, new CVE detections)",
+      "summary": "Cloudflare's managed WAF ships frequent detection improvements (e.g. 2026 SQLi, RCE-Java-deserialization, and CVE-specific rules such as React Server DoS CVE-2026-23864), plus a continuously updated leaked-credentials database. Monitor Security Events and promote beta rules from Log to Block as they mature.",
+      "whyEvaluate": "Your DNS zones + marketing/website are public attack surface. Turning on/monitoring the managed ruleset and leaked-credentials detection is largely config-level and protects against current CVEs (relevant if your site uses React/WordPress/PHP). Some protections are available on Free/Pro tiers.",
+      "fitSignals": "Public-facing site or app on a Cloudflare zone; any login form (leaked-credentials check); a React/WordPress/PHP stack matching recent CVE rules.",
+      "docsUrl": "https://developers.cloudflare.com/waf/"
+    },
+    {
+      "name": "Cloudflare Vite plugin (assets-only config optional, programmatic config, auxiliary Workers)",
+      "area": "Workers / Pages (full-stack dev)",
+      "status": "GA-but-new (auxiliary Workers Jan 2026; optional/programmatic config Dec 2025)",
+      "summary": "The Vite plugin now: makes wrangler config optional for assets-only/static sites (generates sensible defaults), supports programmatic Worker config via a `config` option, supports full Vite static-asset handling inside the Worker, and supports auxiliary Workers (extra Workers called via service bindings) alongside full-stack frameworks like React Router and TanStack Start (Vite 7+).",
+      "whyEvaluate": "As Pages converges into Workers, the Vite plugin is the modern path to build and deploy your website/front-end plus its API as Workers + static assets. Auxiliary Workers let you split your ~9 Workers into a clean main+helpers architecture from one build. Reduces config boilerplate for static/marketing sites.",
+      "fitSignals": "You run Cloudflare Pages and/or a Vite/React front-end; multiple Workers that could be modeled as a main entry Worker plus service-bound helpers; considering the Pages-to-Workers migration.",
+      "docsUrl": "https://developers.cloudflare.com/workers/vite-plugin/"
+    },
+    {
+      "name": "Cloudflare One Client (WARP) 2026.5 beta — new desktop UI",
+      "area": "Zero Trust",
+      "status": "beta release (May 29, 2026; Windows + macOS beta channel)",
+      "summary": "New Cloudflare One Client UI for Windows/macOS with a right-click context menu for common actions, built-in captive-portal login, DNS search-suffix support pushed from device profiles, and per-profile VNET availability scoping. Available on the beta releases download page.",
+      "whyEvaluate": "Only relevant if you (or your small team) use WARP/Zero Trust on devices. The beta client improves day-to-day usability; worth testing on one machine before rolling out. Zero Trust has a free tier for small teams.",
+      "fitSignals": "You already deploy WARP / Cloudflare One Client to team devices; a small team using Zero Trust. NOT relevant if you have no Zero Trust deployment.",
+      "docsUrl": "https://developers.cloudflare.com/cloudflare-one/team-and-resources/devices/cloudflare-one-client/download/beta-releases/"
+    },
+    {
+      "name": "Billable Usage dashboard & Budget alerts",
+      "area": "Fundamentals / Workers (cost control)",
+      "status": "GA-but-new (Apr 2026; pay-as-you-go accounts)",
+      "summary": "Daily, invoice-accurate visibility into usage-based costs across the account, plus configurable Budget alerts that notify you when spend crosses a threshold. Same data source as the monthly invoice.",
+      "whyEvaluate": "With Workers, KV, R2, D1, and AI all metered, a small account benefits from early-warning on cost spikes (e.g. a runaway Worker or AI usage). Pure safety net; no code changes.",
+      "fitSignals": "You're on a pay-as-you-go (Workers Paid) plan with usage-based services; no current spend monitoring or budget guardrails.",
+      "docsUrl": "https://developers.cloudflare.com/changelog/post/2026-04-13-billable-usage-dashboard-and-budget-alerts/"
+    },
+    {
+      "name": "GLM-5.2 and refreshed Workers AI model catalog",
+      "area": "Workers AI",
+      "status": "GA-but-new (GLM-5.2 Jun 16, 2026; catalog refresh with deprecations May 2026)",
+      "summary": "New flagship agentic-coding model @cf/zai-org/glm-5.2 (function calling, reasoning, large context launching at 262K tokens) and other refreshes like glm-4.7-flash. Older models are being deprecated, so apps should migrate. Usable via the AI binding (env.AI.run()), REST /run or /v1/chat/completions, or AI Gateway.",
+      "whyEvaluate": "If you run any inference on Workers AI, the catalog refresh means better/cheaper models and forced migrations off deprecated ones. Newer agentic/tool-calling models pair well with Dynamic Workers and the Agents SDK for on-platform AI features.",
+      "fitSignals": "Any Worker that calls Workers AI; references to soon-deprecated model IDs; plans for an AI assistant, content generation, or coding agent.",
+      "docsUrl": "https://developers.cloudflare.com/workers-ai/models/glm-5.2/"
+    }
+  ]
+}

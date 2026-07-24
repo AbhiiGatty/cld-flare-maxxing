@@ -1,0 +1,20 @@
+{
+  "name": "cld-flare-maxxing",
+  "interface": {
+    "displayName": "Cloudflare Maxxing"
+  },
+  "plugins": [
+    {
+      "name": "cld-flare-maxxing",
+      "source": {
+        "source": "local",
+        "path": "./plugins/cld-flare-maxxing"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_USE"
+      },
+      "category": "Developer"
+    }
+  ]
+}

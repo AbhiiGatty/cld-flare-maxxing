@@ -63,7 +63,7 @@ if (
   process.exit(1)
 }
 
-loadEnv(join(DIRS.root, '.env'))
+loadEnv(DIRS.env)
 const read = makeClient({ mode: 'read' })
 const accountId = await resolveAccountId(read)
 const services = await read.getAll(`/accounts/${accountId}/workers/services`, {

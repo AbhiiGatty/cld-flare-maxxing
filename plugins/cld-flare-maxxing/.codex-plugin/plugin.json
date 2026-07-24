@@ -1,0 +1,38 @@
+{
+  "name": "cld-flare-maxxing",
+  "version": "1.1.0",
+  "description": "Run a Cloudflare account safely from any project with read-only snapshots, findings, recommendations, and guarded changes.",
+  "author": {
+    "name": "AbhiiGatty",
+    "url": "https://github.com/AbhiiGatty"
+  },
+  "homepage": "https://cld-flare-maxxing.abhiigatty.com",
+  "repository": "https://github.com/AbhiiGatty/cld-flare-maxxing",
+  "license": "MIT",
+  "keywords": [
+    "cloudflare",
+    "security",
+    "dns",
+    "infrastructure",
+    "agent"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Cloudflare Maxxing",
+    "shortDescription": "Run Cloudflare safely from any project",
+    "longDescription": "Inspect, explain, secure, and maximize a Cloudflare account without adding dependencies or generic env files to the host project.",
+    "developerName": "AbhiiGatty",
+    "category": "Developer",
+    "capabilities": [
+      "Read",
+      "Guarded Write"
+    ],
+    "websiteURL": "https://cld-flare-maxxing.abhiigatty.com",
+    "defaultPrompt": [
+      "Inspect my Cloudflare account safely.",
+      "Find what is misconfigured in Cloudflare.",
+      "Show how to get more from Cloudflare."
+    ],
+    "brandColor": "#FF7A18"
+  }
+}

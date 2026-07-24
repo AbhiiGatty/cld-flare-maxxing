@@ -1,0 +1,4 @@
+interface:
+  display_name: "Cloudflare Maxxing"
+  short_description: "Run and improve Cloudflare from any project"
+  default_prompt: "Use $cloudflare-maxxing to inspect my Cloudflare account safely."

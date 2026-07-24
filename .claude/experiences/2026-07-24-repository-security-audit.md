@@ -76,6 +76,37 @@ production build pass. The local landing page was checked in the in-app browser 
 dialog works, and the console is clean. The deployed site still has the old subtitle and old
 headers because no live Cloudflare deployment was authorized.
 
+## Portable plugin follow-up
+
+The v1.1.0 packaging pass repeated the security gate against the self-contained skill and both
+plugin manifests. The root and dashboard dependency audits again reported zero
+vulnerabilities. Targeted provider-token, private-key, and credential-assignment scans found
+no matches in the candidate tree. Ignored read-token files, edit-token files, raw data,
+reports, generated dashboard data, and the alias vault remained outside Git.
+
+Twenty-six Node tests passed. New cases copy the complete skill outside its source path and
+verify that initialization creates only `.cloudflare-maxxing/`, preserves an existing host
+`.env` and `package.json` byte for byte, rejects unbundled actions, and keeps every bundled
+runtime source synchronized with the repository implementation. Synthetic Claude-hook cases
+allow ordinary host cleanup and read-only Cloudflare calls while blocking recursive deletion
+of `.cloudflare-maxxing/`, direct API deletion, Wrangler deletion, and Cloudflare Code Mode
+writes.
+
+The copied-skill dashboard initially exposed a Windows-only launch failure:
+`spawnSync npm.cmd EINVAL`. The portable runner now uses the Windows command processor with
+fixed npm arguments and its read-only allowlisted environment for dashboard install and
+build. Guarded Cloudflare action subprocesses still use no shell. A second copied-skill build
+installed 89 locked dashboard packages, reported zero vulnerabilities, and produced the Vite
+dashboard successfully.
+
+Both the skill validator and plugin validator passed. Dedicated `gitleaks`, `trufflehog`, and
+`detect-secrets` binaries were still unavailable, so the secret scan used targeted patterns
+and the existing repository regression suite.
+
+GitHub reported no checks on the v1.1.0 release PR. A read-only CI workflow was added before
+merge. It receives no Cloudflare token and runs the regression tests, both dependency audits,
+and the dashboard build with pinned GitHub Actions.
+
 ## Scope and method
 
 The audit covered the 157 locally tracked files, 13 untracked non-ignored files,
