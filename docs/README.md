@@ -8,6 +8,7 @@ extend it. `CLAUDE.md`/`AGENTS.md` at the repo root are the rules; these are the
 | `ARCHITECTURE.md` | the data-flow diagram and file map, start here to understand how a snapshot becomes a dashboard |
 | `SAFETY.md` | the three-layer defense model and the break-glass protocol for making a real change |
 | `TOKEN-SETUP.md` | exact steps and permission scopes for creating `CF_READ_TOKEN` and `CF_EDIT_TOKEN` |
+| `USING-WITH-CLAUDE-AND-CODEX.md` | one-prompt setup, skill discovery, and which optional parts can be skipped |
 | `SHARING.md` | what's safe to share publicly vs. what stays in your private repo |
 | `PUBLIC-LAUNCH-CHECKLIST.md` | verified blockers and repository, release, site, and visibility checks before going public |
 | `RELEASING.md` | the version-bump/tag/release checklist |

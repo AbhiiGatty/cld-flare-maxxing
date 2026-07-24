@@ -46,6 +46,8 @@ test('action subprocesses do not use a shell or inherit the full environment', a
 test('dry runs finish before loading the edit token', async () => {
   for (const file of [
     'dns-delete-record.mjs',
+    'pages-git-auto-deploy-toggle.mjs',
+    'pages-deploy-site.mjs',
     'pages-preview-toggle.mjs',
     'purge-cache.mjs',
   ]) {
@@ -55,6 +57,15 @@ test('dry runs finish before loading the edit token', async () => {
     assert.ok(dryRun >= 0, `${file} has no dry-run branch`)
     assert.ok(editBoot > dryRun, `${file} loads the edit token before its dry run exits`)
   }
+})
+
+test('Pages deployment preflight fails closed and does not paginate the project list', async () => {
+  const source = await readFile(new URL('pages-deploy-site.mjs', actionsDir), 'utf8')
+
+  assert.match(source, /await read\.get\(`\/accounts\/\$\{accountId\}\/pages\/projects`\)/)
+  assert.doesNotMatch(source, /getAll\(`\/accounts\/\$\{accountId\}\/pages\/projects`/)
+  assert.doesNotMatch(source, /\.catch\(\(\) => \[\]\)/)
+  assert.doesNotMatch(source, /process\.exit\(0\)/)
 })
 
 test('Social Desk install and build steps finish before loading the edit token', async () => {

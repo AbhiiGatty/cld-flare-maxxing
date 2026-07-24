@@ -1,7 +1,10 @@
-# Token setup (two-token model)
+# Token setup (read first, edit only when needed)
 
-You create **two** Cloudflare API tokens. The read token does all routine work; the edit
-token only exists when you're deliberately making a change.
+Start with **one read-only token**. It handles setup, snapshots, reports, diffs, and the
+dashboard. Do not create an edit token during normal setup.
+
+The second token is optional. Create it only when you have chosen a specific account change,
+reviewed its dry run, and are ready to use break-glass.
 
 Create tokens at: **Cloudflare dashboard → My Profile → API Tokens → Create Token**
 (URL: https://dash.cloudflare.com/profile/api-tokens)
@@ -40,7 +43,7 @@ npm run setup                 # verifies the token reaches the API
 
 ---
 
-## 2. Edit / break-glass token  →  `.env.break-glass`  (`CF_EDIT_TOKEN`)
+## 2. Optional edit / break-glass token  →  `.env.break-glass`  (`CF_EDIT_TOKEN`)
 
 Only needed when you intend to **change** the account. Keep it scoped tight and prefer to
 **delete `.env.break-glass` after use**.
@@ -69,21 +72,17 @@ See `docs/SAFETY.md` for the full break-glass protocol and what's blocked.
 
 ---
 
-## 3. Live MCP servers (separate from the two tokens above)
+## 3. Optional live MCP servers
 
-`.mcp.json` wires in Cloudflare's own remote MCP servers (bindings, builds, observability,
-docs, dns-analytics, graphql, radar, and the primary `cloudflare` "Code Mode" server). These
-authenticate via **OAuth**, triggered automatically the first time a Cloudflare MCP tool is
-used - there's nothing to create or paste into a file, unlike `CF_READ_TOKEN`/`CF_EDIT_TOKEN`.
+`.mcp.json` contains Cloudflare's API Code Mode server and documentation server. They are
+optional and are not used by `npm run setup`, `npm run refresh`, reports, diffs, or the
+dashboard. The API server authenticates with **OAuth** the first time it is used.
 
 If Cloudflare's OAuth consent screen offers a choice of permissions, pick read-only - this repo
 can't force that scope from its side. See `docs/SAFETY.md` for how `mcp__cloudflare__execute`
 (the one server here with no fixed tool list) is gated regardless of what the OAuth grant allows.
 
-Using an agent other than Claude Code? These same MCP servers, plus Cloudflare's own Skills
-plugin bundle, install with one command per agent -
-[developers.cloudflare.com/agent-setup/prompt.md](https://developers.cloudflare.com/agent-setup/prompt.md)
-has the exact config for Codex, OpenCode, Windsurf, Cursor, and Copilot. Claude Code users get
-the MCP servers automatically from this repo's own `.mcp.json`; the Skills bundle is a separate,
-optional install (`claude plugin install cloudflare@cloudflare`) for hands-on Workers/D1/R2
-development alongside this repo's own governance tooling.
+Cloudflare also publishes an optional Skills plugin for hands-on Workers, D1, R2, and Durable
+Objects development. It complements this account-governance repository but is not required.
+Use [Cloudflare's current agent setup](https://developers.cloudflare.com/agent-setup/) for the
+latest install instructions.

@@ -25,6 +25,7 @@ import { makeClient, resolveAccountId } from '../lib/cf.mjs'
 import { bootEdit, commandEnv, parseArgs, audit, wranglerExecutable } from './_lib.mjs'
 import { writeVersion } from '../write-version.mjs'
 
+async function main() {
 const { args, commit } = parseArgs(process.argv.slice(2))
 const action = 'pages-deploy-site'
 const project = args.project || 'cldflare-maxxing-site'
@@ -52,7 +53,11 @@ loadEnv(join(DIRS.root, '.env'))
 const read = makeClient({ mode: 'read' })
 const accountId = await resolveAccountId(read)
 
-const existing = await read.getAll(`/accounts/${accountId}/pages/projects`, { query: { per_page: 50 } }).catch(() => [])
+// The Pages project list endpoint currently rejects page/per_page query options.
+// Do not hide a failed preflight as an empty account: that can make a dry run
+// falsely claim an existing project and domain are missing.
+const existing = await read.get(`/accounts/${accountId}/pages/projects`)
+if (!Array.isArray(existing)) throw new Error('Cloudflare Pages project preflight returned an unexpected response')
 const proj = existing.find((p) => p.name === project)
 const domainAttached = proj?.domains?.includes(domain)
 
@@ -66,7 +71,7 @@ if (!commit) {
   log.warn('DRY-RUN — nothing deployed, nothing mutated.')
   log.warn('Re-run with --commit (and break-glass armed) to apply.')
   audit({ action, status: 'DRY_RUN', project, domain, domainAttached })
-  process.exit(0)
+  return
 }
 
 const cf = bootEdit(action, { project, domain })
@@ -137,3 +142,6 @@ if (!domainAttached) {
   log.ok(`custom domain already attached: ${domain}`)
 }
 log.ok('pages-deploy-site applied. Allow a few minutes for DNS/SSL to propagate.')
+}
+
+await main()

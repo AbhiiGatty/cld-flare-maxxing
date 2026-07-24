@@ -7,10 +7,14 @@
 **The AI agent that runs your Cloudflare account for you.** Point any AI coding harness at
 your account once. It snapshots the state, finds what's misconfigured, tells you who changed
 what, fixes what you approve, and teaches you how to get more out of the platform. All from
-inside your editor, and read-only until you say otherwise. Works with Claude Code today, and
-any other harness that reads `AGENTS.md`.
+inside your editor, and read-only until you say otherwise. It works with Claude Code, Codex,
+and any other harness that reads `AGENTS.md`.
 
 Live site: **[cld-flare-maxxing.abhiigatty.com](https://cld-flare-maxxing.abhiigatty.com)**
+
+The repository is the product. The website is a static introduction for people deciding
+whether to use it. Nothing in setup, refresh, reporting, testing, or the dashboard builds or
+deploys the website.
 
 ## What it does
 
@@ -25,43 +29,77 @@ with deterministic aliases, so the repo history is safe to make public. Your tok
 alias vault that maps aliases back to real values never leave your machine (see
 [docs/SHARING.md](docs/SHARING.md)).
 
-Live lookups between snapshots go through Cloudflare's own MCP servers
-([.mcp.json](.mcp.json): bindings, builds, observability, docs, DNS analytics, GraphQL,
-radar, and the primary Cloudflare server for anything else). On top of that sits this repo's
-own safety layer: separate read and edit tokens, and an audited break-glass flow for anything
-that changes the account. See [docs/SAFETY.md](docs/SAFETY.md).
+Optional live lookups use Cloudflare's API and documentation MCP servers in
+[.mcp.json](.mcp.json). They authenticate with Cloudflare only when first used. The normal
+snapshot and report workflow uses the local read token instead. Any approved change goes
+through the repo's separate edit token and audited break-glass flow. See
+[docs/SAFETY.md](docs/SAFETY.md).
 
 Everything lands in this folder, so you build up a versioned history of your account and can
 learn from it later.
 
-## Install
+## Start here
 
-### For anyone (no coding required)
-1. Install an AI coding harness. [Claude Code](https://claude.com/claude-code) has the fullest
-   support here (skills, agents, guardrail hooks); any other harness that reads `AGENTS.md`
-   works too, just with less built-in polish.
-2. Open this repo as a project in that harness.
-3. Say "set me up." It walks you through creating the two Cloudflare API tokens it needs (a
-   read-only one for everyday use, an edit one only for the moment you approve a change) and
-   creates your local config for you.
-4. Say "refresh and show me the dashboard." From here on, just tell it what you want to check
-   or change, in plain language.
+Clone the repository and open that folder in your agent. Its project skills load
+automatically from `.claude/skills/` in Claude Code and `.agents/skills/` in Codex. This is a
+repo-scoped skill kit, so no marketplace plugin install is required.
 
-### For developers
+You need Git and Node.js 20.19+ or 22.12+. You do not need to run `npm install` for read-only
+setup, snapshots, reports, or diffs.
+
+### Claude Code
+
 ```bash
-npm ci                       # install the pinned Wrangler used by guarded deploy actions
-npm run dashboard:build      # one-time: install dashboard deps
+git clone https://github.com/AbhiiGatty/cld-flare-maxxing.git
+cd cld-flare-maxxing
+claude
+```
+
+Then say:
+
+> Set up read-only Cloudflare access. Do not create an edit token. Then refresh and show me
+> the dashboard.
+
+Claude Code discovers the project skill and guardrail hook from `.claude/`. See
+[Claude Code skills](https://code.claude.com/docs/en/skills).
+
+### Codex
+
+Open the cloned folder in the Codex app, or run:
+
+```bash
+cd cld-flare-maxxing
+codex
+```
+
+Use the same prompt:
+
+> Set up read-only Cloudflare access. Do not create an edit token. Then refresh and show me
+> the dashboard.
+
+Codex discovers the project skill from `.agents/skills/` and the operating rules from
+`AGENTS.md`. No global skill copy is needed. The short cross-agent guide is
+[docs/USING-WITH-CLAUDE-AND-CODEX.md](docs/USING-WITH-CLAUDE-AND-CODEX.md).
+
+### Terminal setup
+
+If you prefer to run the steps yourself:
+
+```bash
 cp .env.example .env         # PowerShell: Copy-Item .env.example .env
-# add CF_READ_TOKEN, see docs/TOKEN-SETUP.md for exact scopes
-npm run setup                # verifies the token reaches the API
-npm run refresh               # snapshot -> report -> betas -> dashboard data
-npm run dashboard             # opens the dashboard at http://localhost:5180
-npm run diff                  # see what changed since the last snapshot, and who did it
+# Add CF_READ_TOKEN. See docs/TOKEN-SETUP.md for the exact read-only template.
+npm run setup                # verify the read token
+npm run refresh              # snapshot -> report -> betas -> dashboard data
+npm run dashboard            # install dashboard packages and open http://localhost:5180
+npm run diff                 # compare the two latest snapshots
 ```
 
 > The repo ships with a generic sample snapshot so the dashboard renders immediately
 > (placeholder resources, two illustrative zones, no real account data). Your first
 > `npm run refresh` replaces it with your live data.
+>
+> `CF_EDIT_TOKEN` is optional. Do not create it unless you have a specific change to make.
+> Root `npm ci` is only needed for guarded Wrangler deployment actions.
 
 ## Commands
 | Command | What it does |
@@ -74,6 +112,7 @@ npm run diff                  # see what changed since the last snapshot, and wh
 | `npm run build-data` | consolidate latest into `dashboard.json` |
 | `npm run refresh` | snapshot, report, betas, build-data |
 | `npm run dashboard` | run the dashboard (Vite, port 5180) |
+| `npm test` | run the safety regression tests |
 | `npm run sanitize` | strip account data from disk, leave only the generic sample (before handing over a zip) |
 
 ## Learn and maximize
@@ -86,6 +125,10 @@ current state is, or who changed something.
 
 Answers are grounded in your real snapshot, cite Cloudflare's docs, and stay read-only unless
 you explicitly approve a change.
+
+Copying only the `cloudflare-maxxing` skill into another project gives the agent its teaching
+and architecture guidance. Snapshotting, reports, the dashboard, and guarded actions still
+need this repository because their scripts and local state live here.
 
 ## Safety (read this)
 
