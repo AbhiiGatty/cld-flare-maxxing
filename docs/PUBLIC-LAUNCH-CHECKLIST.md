@@ -106,8 +106,10 @@ remain open below.
   Cloudflare API deletion, Wrangler deletion, and Cloudflare Code Mode writes.
 - [x] Build the dashboard from a copied skill on Windows. The locked install reports zero
   vulnerabilities.
-- [x] Pass the skill validator, plugin validator, all 25 Node tests, both dependency audits,
+- [x] Pass the skill validator, plugin validator, all 26 Node tests, both dependency audits,
   the targeted secret scan, and `git diff --check`.
+- [x] Add read-only pull-request CI for the regression tests, dependency audits, and dashboard
+  build. The workflow receives no Cloudflare token.
 - [x] Document the architecture correction and portable security follow-up in
   `.claude/experiences/`.
 - [ ] Merge the v1.1.0 release PR to `main`.

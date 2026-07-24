@@ -1,0 +1,39 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            dashboard/package-lock.json
+      - name: Install locked root tooling
+        run: npm ci
+      - name: Run regression tests
+        run: npm test
+      - name: Audit root dependencies
+        run: npm audit --audit-level=high
+      - name: Install locked dashboard dependencies
+        run: npm --prefix dashboard ci
+      - name: Audit dashboard dependencies
+        run: npm --prefix dashboard audit --audit-level=high
+      - name: Build dashboard
+        run: npm --prefix dashboard run build

@@ -11,6 +11,7 @@ gitignored `reports/actions-audit.log`, not in the public changelog.
 - Added a self-contained `cloudflare-maxxing` skill with its scripts, reference catalog,
   dashboard source, and allowlisted guarded actions.
 - Added a portable runner that works from any host project.
+- Added read-only pull-request CI for tests, dependency audits, and the dashboard build.
 
 ### Changed
 

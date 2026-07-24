@@ -11,3 +11,15 @@ test('daily snapshot workflow opens a PR with pinned actions and minimal permiss
   assert.doesNotMatch(workflow, /uses:\s*actions\/[^@\s]+@v\d+/)
   assert.match(workflow, /uses:\s*peter-evans\/create-pull-request@[0-9a-f]{40}/)
 })
+
+test('pull request CI is read-only and receives no Cloudflare secrets', async () => {
+  const workflow = await readFile(new URL('../.github/workflows/ci.yml', import.meta.url), 'utf8')
+
+  assert.match(workflow, /^permissions:\s*\n\s+contents: read/m)
+  assert.match(workflow, /pull_request:/)
+  assert.match(workflow, /npm test/)
+  assert.match(workflow, /npm audit --audit-level=high/)
+  assert.match(workflow, /npm --prefix dashboard run build/)
+  assert.doesNotMatch(workflow, /CF_(?:READ|EDIT)_TOKEN|CF_ALLOW_DESTRUCTIVE/)
+  assert.doesNotMatch(workflow, /uses:\s+[^@\s]+@(?![0-9a-f]{40}\b)/)
+})

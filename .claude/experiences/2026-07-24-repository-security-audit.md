@@ -84,7 +84,7 @@ vulnerabilities. Targeted provider-token, private-key, and credential-assignment
 no matches in the candidate tree. Ignored read-token files, edit-token files, raw data,
 reports, generated dashboard data, and the alias vault remained outside Git.
 
-Twenty-five Node tests passed. New cases copy the complete skill outside its source path and
+Twenty-six Node tests passed. New cases copy the complete skill outside its source path and
 verify that initialization creates only `.cloudflare-maxxing/`, preserves an existing host
 `.env` and `package.json` byte for byte, rejects unbundled actions, and keeps every bundled
 runtime source synchronized with the repository implementation. Synthetic Claude-hook cases
@@ -102,6 +102,10 @@ dashboard successfully.
 Both the skill validator and plugin validator passed. Dedicated `gitleaks`, `trufflehog`, and
 `detect-secrets` binaries were still unavailable, so the secret scan used targeted patterns
 and the existing repository regression suite.
+
+GitHub reported no checks on the v1.1.0 release PR. A read-only CI workflow was added before
+merge. It receives no Cloudflare token and runs the regression tests, both dependency audits,
+and the dashboard build with pinned GitHub Actions.
 
 ## Scope and method
 
