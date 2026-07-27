@@ -11,7 +11,7 @@
  */
 import { randomBytes } from 'node:crypto'
 import { existsSync, readFileSync } from 'node:fs'
-import { isAbsolute, join, resolve } from 'node:path'
+import { dirname, isAbsolute, join, resolve } from 'node:path'
 import { spawnSync } from 'node:child_process'
 import { makeClient, resolveAccountId } from '../lib/cf.mjs'
 import { DIRS } from '../lib/paths.mjs'
@@ -154,10 +154,17 @@ function run(label, command, commandArgs, env, input) {
   }
 }
 
+function npmCommand(args) {
+  if (process.platform !== 'win32') return [npmExecutable(), args]
+  const cli = join(dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npm-cli.js')
+  if (!existsSync(cli)) throw new Error(`npm CLI is missing at ${cli}`)
+  return [process.execPath, [cli, ...args]]
+}
+
 if (commit) {
 const buildEnv = commandEnv()
-run('install locked Review Relay dependencies', npmExecutable(), ['ci'], buildEnv)
-run('verify Review Relay Worker', npmExecutable(), ['run', 'check'], buildEnv)
+run('install locked Review Relay dependencies', ...npmCommand(['ci']), buildEnv)
+run('verify Review Relay Worker', ...npmCommand(['run', 'check']), buildEnv)
 
 const cf = bootEdit(action, {
   source,
