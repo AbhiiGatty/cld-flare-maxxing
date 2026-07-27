@@ -130,7 +130,6 @@ if (!commit) {
     workerExists: Boolean(before.worker),
     widgetExists: Boolean(before.widget),
   })
-  process.exit(0)
 }
 
 function run(label, command, commandArgs, env, input) {
@@ -155,6 +154,7 @@ function run(label, command, commandArgs, env, input) {
   }
 }
 
+if (commit) {
 const buildEnv = commandEnv()
 run('install locked Review Relay dependencies', npmExecutable(), ['ci'], buildEnv)
 run('verify Review Relay Worker', npmExecutable(), ['run', 'check'], buildEnv)
@@ -264,3 +264,4 @@ console.log(JSON.stringify({
   hostname,
   turnstileSitekey: after.widget.sitekey,
 }, null, 2))
+}
