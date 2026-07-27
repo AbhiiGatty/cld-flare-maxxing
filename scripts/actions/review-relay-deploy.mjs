@@ -66,19 +66,25 @@ if (
 const source = resolve(sourceInput)
 const workerDir = join(source, 'workers', 'review-relay')
 const config = join(workerDir, 'wrangler.jsonc')
+const bootstrapConfig = join(workerDir, 'wrangler.bootstrap.jsonc')
 const packageFile = join(workerDir, 'package.json')
 
-if (!existsSync(config) || !existsSync(packageFile)) {
+if (!existsSync(config) || !existsSync(bootstrapConfig) || !existsSync(packageFile)) {
   log.err('source does not contain workers/review-relay configuration')
   process.exit(1)
 }
 
 const configText = readFileSync(config, 'utf8')
+const bootstrapConfigText = readFileSync(bootstrapConfig, 'utf8')
 if (
   configText.includes('00000000-0000-0000-0000-000000000000')
+  || bootstrapConfigText.includes('00000000-0000-0000-0000-000000000000')
   || !configText.includes(domain)
+  || !bootstrapConfigText.includes(domain)
   || !configText.includes(workerName)
+  || !bootstrapConfigText.includes(workerName)
   || !configText.includes(databaseName)
+  || !bootstrapConfigText.includes(databaseName)
 ) {
   log.err('Review Relay Wrangler configuration is incomplete or does not match the requested resources')
   process.exit(1)
@@ -191,13 +197,6 @@ run('apply remote D1 migrations', process.execPath, [
   'wrangler.jsonc',
 ], mutationEnv)
 
-run('deploy Worker and Custom Domain', process.execPath, [
-  wranglerBin,
-  'deploy',
-  '--config',
-  'wrangler.jsonc',
-], mutationEnv)
-
 let widget = before.widget
 if (!widget) {
   const response = await cf.raw('POST', `/accounts/${accountId}/challenges/widgets`, {
@@ -231,6 +230,15 @@ if (!widget?.sitekey || !widget.secret) {
   throw new Error('Turnstile widget verification did not return an installable secret.')
 }
 
+if (!before.worker) {
+  run('bootstrap Worker and Custom Domain', process.execPath, [
+    wranglerBin,
+    'deploy',
+    '--config',
+    'wrangler.bootstrap.jsonc',
+  ], mutationEnv)
+}
+
 run(
   'install TURNSTILE_SECRET_KEY',
   process.execPath,
@@ -245,6 +253,13 @@ run(
   mutationEnv,
   `${randomBytes(32).toString('base64url')}\n`,
 )
+
+run('deploy Worker and Custom Domain', process.execPath, [
+  wranglerBin,
+  'deploy',
+  '--config',
+  'wrangler.jsonc',
+], mutationEnv)
 
 const after = await accountState(cf)
 if (!after.worker || !after.database?.uuid || !after.widget?.sitekey) {
