@@ -1,6 +1,42 @@
 {
-  "latest": "2026-07-23T12-20-05Z",
+  "latest": "2026-07-30T04-39-23Z",
   "runs": [
+    {
+      "stamp": "2026-07-30T04-39-23Z",
+      "generatedAt": "2026-07-30T04:39:59.805Z",
+      "counts": {
+        "zones": 5,
+        "dnsRecords": 53,
+        "workers": 12,
+        "kv": 3,
+        "r2": 2,
+        "d1": 4,
+        "queues": 3,
+        "pages": 5,
+        "members": 1,
+        "tokens": 0,
+        "auditEntries": 2298,
+        "errors": 22
+      }
+    },
+    {
+      "stamp": "2026-07-29T16-46-13Z",
+      "generatedAt": "2026-07-29T16:46:52.116Z",
+      "counts": {
+        "zones": 5,
+        "dnsRecords": 52,
+        "workers": 12,
+        "kv": 3,
+        "r2": 2,
+        "d1": 4,
+        "queues": 3,
+        "pages": 5,
+        "members": 1,
+        "tokens": 0,
+        "auditEntries": 2192,
+        "errors": 31
+      }
+    },
     {
       "stamp": "2026-07-23T12-20-05Z",
       "generatedAt": "2026-07-23T12:20:48.581Z",
