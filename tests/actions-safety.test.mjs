@@ -77,6 +77,17 @@ test('Social Desk install and build steps finish before loading the edit token',
   assert.ok(secrets.indexOf("spawnSync(npmExecutable()") < secrets.indexOf('const cf = bootEdit'))
 })
 
+test('Review Relay actions keep dry-run and verification ahead of edit access', async () => {
+  const provision = await readFile(new URL('review-relay-provision.mjs', actionsDir), 'utf8')
+  const deploy = await readFile(new URL('review-relay-deploy.mjs', actionsDir), 'utf8')
+
+  assert.ok(provision.indexOf('if (!commit)') < provision.indexOf('const cf = bootEdit'))
+  assert.ok(deploy.indexOf('if (!commit)') < deploy.indexOf('const cf = bootEdit'))
+  assert.ok(deploy.indexOf("run('verify Review Relay Worker'") < deploy.indexOf('const cf = bootEdit'))
+  assert.doesNotMatch(deploy, /console\.log\([^)]*secret/i)
+  assert.doesNotMatch(deploy, /writeFile|appendFile/)
+})
+
 test('public action source contains no operator email addresses', async () => {
   const provision = await readFile(new URL('social-desk-provision.mjs', actionsDir), 'utf8')
   assert.doesNotMatch(provision, /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i)

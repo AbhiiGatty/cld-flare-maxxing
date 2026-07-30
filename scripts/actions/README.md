@@ -23,6 +23,8 @@ environment containing the scoped Cloudflare credential instead of the full pare
 | `social-desk-provision.mjs` | create the Social Desk D1 database and exact-email Access application; operator addresses come from `--emails` or local `.env` |
 | `social-desk-deploy.mjs` | apply Social Desk D1 migrations and deploy its Worker and Custom Domain |
 | `social-desk-meta-secrets.mjs` | install the four Social Desk Meta values as encrypted Worker secrets without logging their values |
+| `review-relay-provision.mjs` | create the Review Relay D1 database; Turnstile stays paired with deployment so its secret never touches disk |
+| `review-relay-deploy.mjs` | verify, migrate, and deploy Review Relay; create/reuse Turnstile and install both Worker secrets through stdin |
 | `_lib.mjs` | shared edit/read bootstrap, argument, subprocess-environment, Wrangler-path, and audit helpers |
 
 To add a new action: copy an existing file, call `bootEdit()` and `parseArgs()`, keep dry-run
