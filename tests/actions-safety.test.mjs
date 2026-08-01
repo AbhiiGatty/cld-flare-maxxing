@@ -77,6 +77,18 @@ test('Social Desk install and build steps finish before loading the edit token',
   assert.ok(secrets.indexOf("spawnSync(npmExecutable()") < secrets.indexOf('const cf = bootEdit'))
 })
 
+test('Deep Research stages required secrets before new Worker code', async () => {
+  const source = await readFile(new URL('deep-research-deploy.mjs', actionsDir), 'utf8')
+  const secretInstall = source.indexOf("'install required Worker secrets'")
+  const deploy = source.indexOf("'deploy Worker and Custom Domain'")
+
+  assert.ok(secretInstall >= 0)
+  assert.ok(deploy > secretInstall)
+  assert.match(source, /'PROVIDER_CREDENTIAL_KEY'/)
+  assert.match(source, /randomBytes\(32\)\.toString\('base64url'\)/)
+  assert.match(source, /suppressOutput: true/)
+})
+
 test('public action source contains no operator email addresses', async () => {
   const provision = await readFile(new URL('social-desk-provision.mjs', actionsDir), 'utf8')
   assert.doesNotMatch(provision, /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i)
