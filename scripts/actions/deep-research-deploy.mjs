@@ -9,7 +9,15 @@
  *
  * DRY-RUN by default. Add --commit to mutate the account.
  */
-import { existsSync, readFileSync } from 'node:fs'
+import {
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  renameSync,
+  writeFileSync,
+} from 'node:fs'
+import { randomBytes } from 'node:crypto'
 import { dirname, isAbsolute, join, resolve } from 'node:path'
 import { spawnSync } from 'node:child_process'
 import { DIRS } from '../lib/paths.mjs'
@@ -32,6 +40,13 @@ const workerName = String(args.worker || '')
 const databaseName = String(args.database || '')
 const domain = String(args.domain || '').toLowerCase()
 const secretFile = join(DIRS.root, 'secrets', 'deep-research.json')
+const providerSecretFile = join(DIRS.root, 'secrets', 'deep-research-provider.json')
+const requiredSecrets = [
+  'RUNNER_HMAC_SECRET',
+  'RUNNER_ACCESS_CLIENT_ID',
+  'RUNNER_ACCESS_CLIENT_SECRET',
+  'PROVIDER_CREDENTIAL_KEY',
+]
 
 if (!sourceInput || !isAbsolute(sourceInput) || !workerName || !databaseName || !domain) {
   log.err(
@@ -70,21 +85,49 @@ if (
   || !configText.includes(workerName)
   || !configText.includes(databaseName)
   || !/"database_id"\s*:\s*"[0-9a-f-]{36}"/i.test(configText)
+  || requiredSecrets.some((name) => !configText.includes(`"${name}"`))
 ) {
   log.err('Wrangler configuration is incomplete or does not match the requested Worker, D1, and domain')
   process.exit(1)
 }
 
 const credentials = JSON.parse(readFileSync(secretFile, 'utf8'))
-const secretPayload = {
+const runnerSecrets = {
   RUNNER_HMAC_SECRET: credentials.runnerHmacSecret,
   RUNNER_ACCESS_CLIENT_ID: credentials.runnerAccessClientId,
   RUNNER_ACCESS_CLIENT_SECRET: credentials.runnerAccessClientSecret,
 }
-if (Object.values(secretPayload).some((value) => typeof value !== 'string' || !value)) {
+if (Object.values(runnerSecrets).some((value) => typeof value !== 'string' || !value)) {
   log.err('runner credential bundle is incomplete')
   process.exit(1)
 }
+
+function loadProviderKey() {
+  if (!existsSync(providerSecretFile)) return null
+  const bundle = JSON.parse(readFileSync(providerSecretFile, 'utf8'))
+  const value = String(bundle.providerCredentialKey || '')
+  if (!/^[A-Za-z0-9_-]{43}$/.test(value) || Buffer.from(value, 'base64url').byteLength !== 32) {
+    throw new Error(`${providerSecretFile} is invalid; refusing to rotate or replace it`)
+  }
+  return value
+}
+
+function writeProviderKey(value) {
+  mkdirSync(dirname(providerSecretFile), { recursive: true, mode: 0o700 })
+  const temporary = `${providerSecretFile}.tmp`
+  writeFileSync(temporary, JSON.stringify({
+    providerCredentialKey: value,
+    createdAt: new Date().toISOString(),
+  }, null, 2), { encoding: 'utf8', mode: 0o600 })
+  try {
+    chmodSync(temporary, 0o600)
+  } catch {
+    // Windows ACLs are managed separately; the directory is gitignored.
+  }
+  renameSync(temporary, providerSecretFile)
+}
+
+let providerKey = loadProviderKey()
 
 loadEnv(DIRS.env)
 const read = makeClient({ mode: 'read' })
@@ -100,7 +143,8 @@ log.info(`source: ${source}`)
 log.info(`Worker ${workerName}: ${workerExists ? 'update' : 'create'}`)
 log.info(`D1 migrations: apply pending migrations to ${databaseName}`)
 log.info(`Custom Domain: ${domain}`)
-log.info(`Worker secrets: ${Object.keys(secretPayload).join(', ')}`)
+log.info(`Worker secrets: ${requiredSecrets.join(', ')}`)
+log.info(`Provider encryption key: ${providerKey ? 'reuse existing' : 'create once on commit'}`)
 
 if (!commit) {
   log.warn('DRY-RUN - nothing changed. Re-run with --commit to apply.')
@@ -112,7 +156,7 @@ if (!commit) {
     databaseName,
     domain,
     workerExists,
-    secretNames: Object.keys(secretPayload),
+    secretNames: requiredSecrets,
   })
 }
 
@@ -168,8 +212,17 @@ if (commit) {
     worker: workerName,
     database: databaseName,
     domain,
-    secretNames: Object.keys(secretPayload),
+    secretNames: requiredSecrets,
   })
+  if (!providerKey) {
+    providerKey = randomBytes(32).toString('base64url')
+    writeProviderKey(providerKey)
+    log.ok('created the local provider encryption key')
+  }
+  const secretPayload = {
+    ...runnerSecrets,
+    PROVIDER_CREDENTIAL_KEY: providerKey,
+  }
   const mutationEnv = commandEnv({
     CLOUDFLARE_API_TOKEN: cf.token,
     CLOUDFLARE_ACCOUNT_ID: accountId,
@@ -186,19 +239,19 @@ if (commit) {
     '--config',
     'wrangler.jsonc',
   ], mutationEnv)
+  run(
+    'install required Worker secrets',
+    process.execPath,
+    [wranglerBin, 'secret', 'bulk', '--config', 'wrangler.jsonc'],
+    mutationEnv,
+    { input: JSON.stringify(secretPayload), suppressOutput: true },
+  )
   run('deploy Worker and Custom Domain', process.execPath, [
     wranglerBin,
     'deploy',
     '--config',
     'wrangler.jsonc',
   ], mutationEnv)
-  run(
-    'install runner Worker secrets',
-    process.execPath,
-    [wranglerBin, 'secret', 'bulk', '--config', 'wrangler.jsonc'],
-    mutationEnv,
-    { input: JSON.stringify(secretPayload), suppressOutput: true },
-  )
 
   const service = await cf.get(
     `/accounts/${accountId}/workers/services/${encodeURIComponent(workerName)}`,
@@ -215,7 +268,7 @@ if (commit) {
   const installedSecretNames = new Set(
     JSON.parse(secretListOutput).map((item) => String(item.name || '')),
   )
-  const missingSecrets = Object.keys(secretPayload).filter((name) => !installedSecretNames.has(name))
+  const missingSecrets = requiredSecrets.filter((name) => !installedSecretNames.has(name))
   if (missingSecrets.length) {
     throw new Error(`Worker secret verification failed for: ${missingSecrets.join(', ')}`)
   }
@@ -227,8 +280,8 @@ if (commit) {
     worker: workerName,
     database: databaseName,
     domain,
-    secretNames: Object.keys(secretPayload),
+    secretNames: requiredSecrets,
     step: 'verified',
   })
-  log.ok('Deep Research migrations, Worker, Custom Domain, and runner secrets deployed.')
+  log.ok('Deep Research migrations, secrets, Worker, and Custom Domain deployed.')
 }
