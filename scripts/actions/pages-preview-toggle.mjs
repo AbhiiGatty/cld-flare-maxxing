@@ -34,8 +34,16 @@ if (!commit) {
 }
 
 const cf = bootEdit(action, { project: args.project, setting: args.setting })
+// preview_branch_includes must be rewritten together with the setting: a
+// leftover ["*"] include list silently overrides "none" and previews keep
+// building (found live on gattyworks, 2026-07-30 - see the experiences log).
+// Dashboard saves write both fields; API updates must too.
+const branchLists =
+  args.setting === 'none' ? { preview_branch_includes: [], preview_branch_excludes: ['*'] }
+  : args.setting === 'all' ? { preview_branch_includes: ['*'], preview_branch_excludes: [] }
+  : {}
 await cf.raw('PATCH', `/accounts/${accountId}/pages/projects/${args.project}`, {
-  body: { source: { config: { preview_deployment_setting: args.setting } } },
+  body: { source: { config: { preview_deployment_setting: args.setting, ...branchLists } } },
 })
 audit({ action, status: 'COMMITTED', project: args.project, from: current, to: args.setting })
 log.ok(`preview_deployment_setting set to "${args.setting}" on ${args.project}`)
