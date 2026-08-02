@@ -22,6 +22,7 @@ environment containing the scoped Cloudflare credential instead of the full pare
 | `pages-preview-toggle.mjs` | change the preview-deployment setting for a Pages project |
 | `deep-research-deploy.mjs` | apply Deep Research migrations, install required encrypted Worker secrets, and deploy its Worker and Custom Domains |
 | `deep-research-clear-runs.mjs` | permanently delete all Deep Research jobs and cascaded normalized results while preserving access, provider, token, usage, and audit data |
+| `deep-research-release-usage.mjs` | release 1 to 10 scan credits charged by a confirmed Deep Research job-creation failure |
 | `social-desk-provision.mjs` | create the Social Desk D1 database and exact-email Access application; operator addresses come from `--emails` or local `.env` |
 | `social-desk-deploy.mjs` | apply Social Desk D1 migrations and deploy its Worker and Custom Domain |
 | `social-desk-meta-secrets.mjs` | install the four Social Desk Meta values as encrypted Worker secrets without logging their values |
