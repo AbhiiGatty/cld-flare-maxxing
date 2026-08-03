@@ -60,6 +60,7 @@ retrievable reasoning, not a full narrative.
 
 | Entry | Summary |
 |---|---|
+| [2026-08-03-social-desk-standalone-deploy.md](2026-08-03-social-desk-standalone-deploy.md) | Kept the guarded Social Desk release path working after the app moved to its own repo and separated migration ordering from Worker deployment |
 | [2026-08-03-social-desk-mcp-access-boundary.md](2026-08-03-social-desk-mcp-access-boundary.md) | Kept Social Desk's browser UI behind identity Access while routing only `/mcp*` to the Worker's account-scoped bearer-token gate |
 | [2026-08-02-deep-research-run-reset.md](2026-08-02-deep-research-run-reset.md) | A module-boundary rebuild required a guarded one-time D1 run reset that preserves access, credentials, tokens, usage, and audit data |
 | [2026-08-02-deep-research-secret-rollout.md](2026-08-02-deep-research-secret-rollout.md) | Deep Research deploys its required secrets before new Worker code and keeps the provider-encryption key out of commands, logs, and source |
