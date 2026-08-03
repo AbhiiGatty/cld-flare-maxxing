@@ -74,6 +74,8 @@ test('Social Desk install and build steps finish before loading the edit token',
 
   assert.ok(deploy.indexOf("run('install locked Social Desk dependencies'") < deploy.indexOf('const cf = bootEdit'))
   assert.ok(deploy.indexOf("run('build Social Desk assets'") < deploy.indexOf('const cf = bootEdit'))
+  assert.match(deploy, /process\.platform === 'win32' \? process\.execPath : npmExecutable\(\)/)
+  assert.match(deploy, /node_modules', 'npm', 'bin', 'npm-cli\.js'/)
   assert.ok(secrets.indexOf("spawnSync(npmExecutable()") < secrets.indexOf('const cf = bootEdit'))
 })
 
