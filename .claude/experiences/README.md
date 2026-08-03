@@ -60,6 +60,7 @@ retrievable reasoning, not a full narrative.
 
 | Entry | Summary |
 |---|---|
+| [2026-08-03-social-desk-mcp-access-boundary.md](2026-08-03-social-desk-mcp-access-boundary.md) | Kept Social Desk's browser UI behind identity Access while routing only `/mcp*` to the Worker's account-scoped bearer-token gate |
 | [2026-08-02-deep-research-run-reset.md](2026-08-02-deep-research-run-reset.md) | A module-boundary rebuild required a guarded one-time D1 run reset that preserves access, credentials, tokens, usage, and audit data |
 | [2026-08-02-deep-research-secret-rollout.md](2026-08-02-deep-research-secret-rollout.md) | Deep Research deploys its required secrets before new Worker code and keeps the provider-encryption key out of commands, logs, and source |
 | [2026-07-07-cloud-mascot-removed.md](2026-07-07-cloud-mascot-removed.md) | Removed the roaming cloud mascot from the landing page on request; no deeper design lesson, logged for completeness (the pattern for cleanly removing a feature: CSS+JS+HTML all at once, no dead code left behind) |
