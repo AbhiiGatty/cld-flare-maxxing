@@ -10,7 +10,7 @@
  * DRY-RUN by default. Add --commit to mutate the account.
  */
 import { existsSync, readFileSync } from 'node:fs'
-import { isAbsolute, join, resolve } from 'node:path'
+import { dirname, isAbsolute, join, resolve } from 'node:path'
 import { spawnSync } from 'node:child_process'
 import { DIRS } from '../lib/paths.mjs'
 import { loadEnv } from '../lib/util.mjs'
@@ -119,8 +119,16 @@ function run(label, command, commandArgs, env) {
 
 if (!migrationsOnly) {
   const buildEnv = commandEnv()
-  run('install locked Social Desk dependencies', npmExecutable(), ['ci'], buildEnv)
-  run('build Social Desk assets', npmExecutable(), ['run', 'build'], buildEnv)
+  const npmCommand = process.platform === 'win32' ? process.execPath : npmExecutable()
+  const npmCli = process.platform === 'win32'
+    ? join(dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npm-cli.js')
+    : null
+  if (npmCli && !existsSync(npmCli)) {
+    throw new Error(`Pinned npm CLI is missing at ${npmCli}`)
+  }
+  const npmArgs = (commandArgs) => npmCli ? [npmCli, ...commandArgs] : commandArgs
+  run('install locked Social Desk dependencies', npmCommand, npmArgs(['ci']), buildEnv)
+  run('build Social Desk assets', npmCommand, npmArgs(['run', 'build']), buildEnv)
 }
 
 const cf = bootEdit(action, {
