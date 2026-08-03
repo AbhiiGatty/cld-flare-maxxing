@@ -2,6 +2,10 @@
 /**
  * Guarded action: apply Social Desk D1 migrations and deploy its Worker.
  *
+ * Accepts either the standalone Social Desk repo or its former tooling/social
+ * location inside the GattyWorks repo. Use --migrations-only to apply D1
+ * migrations without deploying Worker code.
+ *
  * Requires an absolute source path plus explicit Worker, D1, and domain names.
  * DRY-RUN by default. Add --commit to mutate the account.
  */
@@ -27,9 +31,10 @@ const sourceInput = String(args.source || '')
 const workerName = String(args.worker || '')
 const databaseName = String(args.database || '')
 const domain = String(args.domain || '').toLowerCase()
+const migrationsOnly = args['migrations-only'] === true || args['migrations-only'] === 'true'
 
 if (!sourceInput || !isAbsolute(sourceInput) || !workerName || !databaseName || !domain) {
-  log.err('usage: --source=<absolute-repo-path> --worker=<worker-name> --database=<d1-name> --domain=<custom-domain> [--commit]')
+  log.err('usage: --source=<absolute-repo-path> --worker=<worker-name> --database=<d1-name> --domain=<custom-domain> [--migrations-only] [--commit]')
   process.exit(1)
 }
 if (
@@ -43,7 +48,11 @@ if (
 }
 
 const source = resolve(sourceInput)
-const socialDir = join(source, 'tooling', 'social')
+const standaloneConfig = join(source, 'cloud', 'wrangler.jsonc')
+const standalonePackage = join(source, 'package.json')
+const socialDir = existsSync(standaloneConfig) && existsSync(standalonePackage)
+  ? source
+  : join(source, 'tooling', 'social')
 const config = join(socialDir, 'cloud', 'wrangler.jsonc')
 const packageFile = join(socialDir, 'package.json')
 
@@ -74,17 +83,19 @@ const workerExists = services.some(
 )
 
 log.info(`source: ${source}`)
-log.info(`Worker ${workerName}: ${workerExists ? 'update' : 'create'}`)
+log.info(`Worker ${workerName}: ${migrationsOnly ? 'skip deploy' : workerExists ? 'update' : 'create'}`)
 log.info(`D1 migrations: apply pending migrations to ${databaseName}`)
 log.info(`Custom Domain: ${domain}`)
 log.info('Meta secrets and public Meta actions are not part of this deployment.')
 
 if (!commit) {
   log.warn('DRY-RUN - nothing changed. Re-run with --commit to apply.')
-  audit({ action, status: 'DRY_RUN', source, workerExists })
-  process.exit(0)
+  audit({ action, status: 'DRY_RUN', source, workerExists, migrationsOnly })
+} else {
+  await applyRelease()
 }
 
+async function applyRelease() {
 function run(label, command, commandArgs, env) {
   log.info(label)
   const result = spawnSync(command, commandArgs, {
@@ -106,9 +117,11 @@ function run(label, command, commandArgs, env) {
   }
 }
 
-const buildEnv = commandEnv()
-run('install locked Social Desk dependencies', npmExecutable(), ['ci'], buildEnv)
-run('build Social Desk assets', npmExecutable(), ['run', 'build'], buildEnv)
+if (!migrationsOnly) {
+  const buildEnv = commandEnv()
+  run('install locked Social Desk dependencies', npmExecutable(), ['ci'], buildEnv)
+  run('build Social Desk assets', npmExecutable(), ['run', 'build'], buildEnv)
+}
 
 const cf = bootEdit(action, {
   source,
@@ -132,17 +145,21 @@ run('apply remote D1 migrations', process.execPath, [
   '--config',
   'cloud/wrangler.jsonc',
 ], mutationEnv)
-run('deploy Worker and Custom Domain', process.execPath, [
-  wranglerBin,
-  'deploy',
-  '--config',
-  'cloud/wrangler.jsonc',
-], mutationEnv)
+if (!migrationsOnly) {
+  run('deploy Worker and Custom Domain', process.execPath, [
+    wranglerBin,
+    'deploy',
+    '--config',
+    'cloud/wrangler.jsonc',
+  ], mutationEnv)
+}
 
-const service = await cf.get(
-  `/accounts/${accountId}/workers/services/${encodeURIComponent(workerName)}`,
-)
-if (!service) throw new Error('Worker service verification failed.')
+if (!migrationsOnly) {
+  const service = await cf.get(
+    `/accounts/${accountId}/workers/services/${encodeURIComponent(workerName)}`,
+  )
+  if (!service) throw new Error('Worker service verification failed.')
+}
 
 audit({
   action,
@@ -151,6 +168,10 @@ audit({
   worker: workerName,
   database: databaseName,
   domain,
+  migrationsOnly,
   step: 'verified',
 })
-log.ok('Social Desk migrations applied and Worker deployed.')
+log.ok(migrationsOnly
+  ? 'Social Desk migrations applied.'
+  : 'Social Desk migrations applied and Worker deployed.')
+}
