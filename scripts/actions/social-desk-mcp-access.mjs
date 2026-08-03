@@ -73,9 +73,11 @@ if (!commit) {
     applicationExists: Boolean(before.application),
     policyExists: Boolean(existingPolicy),
   })
-  process.exit(0)
 }
 
+if (commit) await provision()
+
+async function provision() {
 const cf = bootEdit(action, { domain, appName })
 let application = before.application
 if (!application) {
@@ -149,3 +151,4 @@ console.log(JSON.stringify({
   accessApplicationId: after.application.id,
   policyId: policy.id,
 }, null, 2))
+}
