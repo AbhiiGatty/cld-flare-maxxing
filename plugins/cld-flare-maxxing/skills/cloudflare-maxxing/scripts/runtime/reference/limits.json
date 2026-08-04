@@ -302,6 +302,13 @@
       "free": "200",
       "paid": "200",
       "notes": "Verified destinations shared across all domains in the account. Inbound message size cap 25 MiB."
+    },
+    {
+      "metric": "Users (seats)",
+      "area": "Zero Trust",
+      "free": "50 users",
+      "paid": "$7/user/month (Standard)",
+      "notes": "Seat = authenticated identity; devices do not multiply the count. No partial charging past 50 - the whole org must upgrade. Standard includes 15 GB data transfer per user, then $1/GB."
     }
   ]
 }

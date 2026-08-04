@@ -489,6 +489,14 @@
       "title": "Service/verification records incorrectly proxied or malformed",
       "detect": "Flag underscore-prefixed records (_dmarc, _acme-challenge, _domainkey, SRV, _mta-sts, TLSA) or domain-verification TXT that are set proxied (these must be DNS-only), or duplicated/expired ACME challenge TXT left over after issuance.",
       "recommendation": "Keep verification/service records DNS-only and remove stale _acme-challenge and one-time verification TXT records after they have served their purpose."
+    },
+    {
+      "id": "cost-zero-trust-seats-over-free-cap",
+      "category": "cost",
+      "severity": "high",
+      "title": "Zero Trust seat count approaching or past the 50-user free cap",
+      "detect": "Count Zero Trust users (GET /accounts/{account_id}/access/users - each entry is an authenticated identity; devices do not multiply the count). Flag high at >=40 seats (80% of the free cap) and critical at >=50. The free plan covers 50 users; crossing 50 has no partial charging or grace period - the whole organization must move to the Standard plan at $7/user/month (which also meters data transfer at 15 GB/user, then $1/GB).",
+      "recommendation": "Before seat 50: remove stale identities (users who left, test accounts, duplicate logins via a second IdP) from Zero Trust > My Team > Users - revoking a user frees the seat. If growth is real, budget the jump consciously: 51 users is 51 x $7 = $357/month, not $7. Consider whether every gated app actually needs Access or whether some can use a different control (IP allowlist, mTLS, Turnstile)."
     }
   ]
 }

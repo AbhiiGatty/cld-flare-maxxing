@@ -55,7 +55,7 @@
 | App-layer firewall (OWASP, CVEs, SQLi/XSS) | **Managed WAF ruleset** + **custom rules** | Some protections on Free/Pro. |
 | Encrypt origin properly | **SSL/TLS mode = Full (Strict)** + Origin CA cert | Flexible is insecure — the report flags it. |
 | Prevent DNS spoofing | **DNSSEC** | One-click on Cloudflare; add DS at registrar. |
-| Protect an internal tool / admin route | **Cloudflare Access** (Zero Trust, free tier) | + Managed OAuth for CLIs/agents. |
+| Protect an internal tool / admin route | **Cloudflare Access** (Zero Trust, free to 50 users) | + Managed OAuth for CLIs/agents. Past 50 users the whole org pays $7/user/month — the report warns at 40 seats. |
 | Expose a local/origin service securely (no open ports) | **Cloudflare Tunnel** (`cloudflared`) | — |
 | Stop leaked-credential logins | **WAF leaked-credentials detection** | — |
 
