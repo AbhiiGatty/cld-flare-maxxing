@@ -128,6 +128,24 @@ async function main() {
     pages: (await safe('account', 'pages', () => cf.get(`/accounts/${accountId}/pages/projects`))) || [],
   }
 
+  // Zero Trust seats. The free plan covers 50 users; crossing 50 forces the
+  // whole org onto Standard at $7/user/month, so seat count is a real billing
+  // boundary worth tracking. A "user" is an authenticated identity (devices
+  // don't multiply the count). Trimmed to what the report needs.
+  const ztUsers = (await safe('account', 'zero_trust_users', () =>
+    cf.getAll(`/accounts/${accountId}/access/users`, { query: { per_page: 50 } })
+  )) || []
+  const zeroTrust = {
+    users: ztUsers.map((u) => ({
+      id: u.id,
+      email: u.email ?? null,
+      access_seat: u.access_seat ?? null,
+      gateway_seat: u.gateway_seat ?? null,
+      last_successful_login: u.last_successful_login ?? null,
+    })),
+    seatCount: ztUsers.length,
+  }
+
   // Cron triggers per worker (best-effort, small N).
   await safe('account', 'cron', async () => {
     for (const w of resources.workers) {
@@ -166,6 +184,7 @@ async function main() {
     d1: resources.d1.length,
     queues: resources.queues.length,
     pages: resources.pages.length,
+    zeroTrustSeats: zeroTrust.seatCount,
     members: members.length,
     tokens: tokens.length,
     auditEntries: auditLog.length,
@@ -183,6 +202,7 @@ async function main() {
     roles,
     tokens,
     resources,
+    zeroTrust,
     zones,
     auditLog,
     counts,

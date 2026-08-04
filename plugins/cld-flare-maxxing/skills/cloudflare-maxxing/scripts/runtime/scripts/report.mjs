@@ -134,6 +134,15 @@ function checkAccount(snap) {
     if (tfa === false) flag('access-member-2fa-disabled', m.user?.email || m.id, {})
   }
 
+  // Zero Trust free plan covers 50 users; crossing 50 forces the whole org
+  // onto Standard ($7/user/month). Warn at 80% so the wall is never a surprise;
+  // at or past the cap it's already a billing event, not a warning.
+  const seats = snap.zeroTrust?.seatCount ?? snap.counts?.zeroTrustSeats
+  if (seats != null) {
+    if (seats >= 50) flag('cost-zero-trust-seats-over-free-cap', snap.account?.name, { seats, freeCap: 50 }, 'critical')
+    else if (seats >= 40) flag('cost-zero-trust-seats-over-free-cap', snap.account?.name, { seats, freeCap: 50 })
+  }
+
   const now = Date.now()
   const D90 = 90 * 864e5
   for (const t of snap.tokens || []) {
@@ -158,6 +167,7 @@ function computeLimits(snap) {
   add('KV namespaces per account', 'KV', c.kv || 0, 1000, 'all')
   add('D1 databases per account', 'D1', c.d1 || 0, 10, 'Free (50,000 on Paid)')
   add('Pages projects per account', 'Pages', c.pages || 0, 100, 'soft')
+  if (c.zeroTrustSeats != null) add('Zero Trust seats (users)', 'Zero Trust', c.zeroTrustSeats, 50, 'Free ($7/user/mo Standard past 50)')
   for (const z of snap.zones || []) {
     add(`DNS records — ${z.name}`, 'DNS', (z.dnsRecords || []).length, 1000, 'Free (3,500 Pro)')
     add(`Page Rules — ${z.name}`, 'Page Rules', (z.pageRules || []).length, 5, 'Free (20 Pro)')

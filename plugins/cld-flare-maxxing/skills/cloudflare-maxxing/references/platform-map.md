@@ -55,7 +55,7 @@ limits/availability with the `cloudflare-docs` MCP before committing to a design
 | Turnstile | Privacy-friendly CAPTCHA | ✅ | GA |
 | DDoS protection | Always-on L3-7 mitigation | ✅ | GA |
 | SSL/TLS + Origin CA | Edge + origin encryption | ✅ | GA |
-| Cloudflare Access (Zero Trust) | Auth-gate apps/tools; SSO; managed OAuth | ✅ small teams | GA |
+| Cloudflare Access (Zero Trust) | Auth-gate apps/tools; SSO; managed OAuth | ✅ up to 50 users | GA |
 | Secrets Store | Account-level secret management | ✅ | New |
 
 ## Email (sending)
@@ -76,5 +76,10 @@ limits/availability with the `cloudflare-docs` MCP before committing to a design
 | Billable Usage + Budget alerts | Cost visibility + alerts | ✅ | GA (new) |
 
 ## Zero Trust / access (team)
-Access, Gateway, WARP, Tunnel, Internal DNS (Enterprise beta). Free tier covers small teams —
-useful to gate internal dashboards/admin routes even for solo/small setups.
+Access, Gateway, WARP, Tunnel, Internal DNS (Enterprise beta). Free tier covers exactly 50
+users — useful to gate internal dashboards/admin routes even for solo/small setups. A user is
+an authenticated identity (devices don't multiply the count). Crossing 50 has no grace period
+or partial charging: the whole org moves to Standard at $7/user/month (51 users = $357/month,
+not $7), and Standard meters data transfer at 15 GB/user, then $1/GB. The report tracks seat
+count against the cap (warns at 40, critical at 50) — free stale seats by revoking departed
+users under Zero Trust > My Team > Users before adding new ones.
