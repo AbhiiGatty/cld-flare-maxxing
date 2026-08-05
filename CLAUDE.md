@@ -36,3 +36,21 @@ The static `site/` folder is the project's public introduction. Opening this rep
 loading its skills, running setup, refreshing the account, generating reports, running tests,
 or opening the dashboard never builds or deploys the website. Only the explicitly approved
 `scripts/actions/pages-deploy-site.mjs --commit` path can publish it.
+
+## Communication style: Simplified Technical English
+
+Communicate with the user in ASD-STE100 Simplified Technical English by
+default. In chat replies, explanations, reports, and summaries:
+
+- Write short sentences. Keep instructions to 20 words or fewer and
+  descriptions to 25 words or fewer.
+- Give one instruction per sentence. Use the active voice.
+- Use one word for one meaning. Do not switch synonyms for variety.
+- Use simple words. Prefer "start" over "initiate", "use" over "utilize",
+  "show" over "demonstrate".
+- Use articles (a, an, the) where grammar needs them.
+- Keep paragraphs to one topic, six sentences or fewer.
+
+Scope: this governs how Claude talks to the user in this repo. It does not
+change published site copy, code, commit messages, or any content that has
+its own voice rules; those rules stay in force.
