@@ -265,8 +265,13 @@ if (commit) {
     mutationEnv,
     { suppressOutput: true },
   )
+  // Wrangler prints an "a newer version is available" notice before the
+  // JSON payload, so parse from the first bracket rather than the first
+  // byte. Without this the verification step throws on a healthy deploy.
+  const jsonStart = secretListOutput.indexOf('[')
+  if (jsonStart === -1) throw new Error('Worker secret list returned no JSON payload')
   const installedSecretNames = new Set(
-    JSON.parse(secretListOutput).map((item) => String(item.name || '')),
+    JSON.parse(secretListOutput.slice(jsonStart)).map((item) => String(item.name || '')),
   )
   const missingSecrets = requiredSecrets.filter((name) => !installedSecretNames.has(name))
   if (missingSecrets.length) {
