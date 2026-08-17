@@ -60,6 +60,9 @@ retrievable reasoning, not a full narrative.
 
 | Entry | Summary |
 |---|---|
+| [2026-08-17-jan-aushadhi-turnstile-provisioning.md](2026-08-17-jan-aushadhi-turnstile-provisioning.md) | Put the missing Jan Aushadhi widget and Worker secret behind one fixed, dry-run-first action that never logs the secret |
+| [2026-08-15-jan-aushadhi-metrics-onboarding.md](2026-08-15-jan-aushadhi-metrics-onboarding.md) | Kept the two-project Jan Aushadhi Metrics D1 write behind a fixed, fingerprinted, dry-run-first release action |
+| [2026-08-15-dpdpa-static-worker-deploy.md](2026-08-15-dpdpa-static-worker-deploy.md) | Added a fixed-target, static-assets-only Worker deploy path for the private DPDPA skill launch without widening the portable action surface |
 | [2026-08-03-social-desk-standalone-deploy.md](2026-08-03-social-desk-standalone-deploy.md) | Kept the guarded Social Desk release path working after the app moved to its own repo and separated migration ordering from Worker deployment |
 | [2026-08-03-social-desk-mcp-access-boundary.md](2026-08-03-social-desk-mcp-access-boundary.md) | Kept Social Desk's browser UI behind identity Access while routing only `/mcp*` to the Worker's account-scoped bearer-token gate |
 | [2026-08-02-deep-research-run-reset.md](2026-08-02-deep-research-run-reset.md) | A module-boundary rebuild required a guarded one-time D1 run reset that preserves access, credentials, tokens, usage, and audit data |
