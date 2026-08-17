@@ -98,5 +98,8 @@ The repository root keeps the same runtime as a contributor and release test har
   `scripts/report.mjs`.
 - Add a mutation only through `scripts/actions/`, then explicitly add its name to the
   portable runner allowlist if it belongs in the public package.
+- Keep release-specific deploy actions in the repository when their fixed resource names and
+  source checks would be unsafe or misleading as a general portable action. The DPDPA landing
+  and Jan Aushadhi Metrics onboarding actions are such release paths.
 - Add a dashboard panel in `dashboard/src/App.jsx`.
 - Update both the root source and bundled runtime, then run the portable drift test.
