@@ -28,7 +28,7 @@ const APPROVED_FILES = Object.freeze({
   'package-lock.json': 'ae882a6bbb1b9a7c79bbd4872e59b5bb81a64edf21e0e48643a42e2ff93fed1d',
   'tsconfig.json': '4fbb61d1cc39d5dcdb79932234c9e0ba1f62ba19d5d6f36fe5836ef110d292db',
   'wrangler.jsonc': '87b2f74a1d27b41c7fb20c425e150da06c7638d0da2880445f0cd6fdd8cde8c1',
-  'src/index.ts': 'b1b53b0ffaf31727d1558a3350b2de617b21049d78c20d5199d417dca46812b1',
+  'src/index.ts': '80927f56df3fb46f0bc4547e266b1054eb0e47ee34160369639806a968794518',
   'src/mcp.ts': '69e2ba6e2ced5ed45dbb3489c8993a3759161045dc7fbba513eb67c5b120238b',
   'dashboard/attribution.js.snippet': 'a92f4310e645cab6d0e595f7f69e5d57f1f118eba429d161fa18447e2f2f9488',
   'dashboard/beacon.js': '7e3e9ccab30d8fe6ab77b49d1118d43f60a4d5ce80d88c01e655853c70c7bf59',
