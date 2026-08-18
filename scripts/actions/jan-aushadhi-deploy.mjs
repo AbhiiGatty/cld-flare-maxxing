@@ -37,8 +37,8 @@ const SOURCE_FILES = Object.freeze([
   'wrangler.toml', 'schema.sql',
 ])
 const EXCLUDED_GENERATED = 'public/data/version.json'
-const APPROVED_SOURCE_COUNT = 149
-const APPROVED_SOURCE_HASH = 'e0883dc8f266683d06a14b7024a6294d2549ced400a272a521ff5526f51600b4'
+const APPROVED_SOURCE_COUNT = 150
+const APPROVED_SOURCE_HASH = '5eff7860702caa8421c837f44fbd54ab8c89874cc49e9ba23a53b22281800c6c'
 
 function fail(message) {
   throw new Error(message)
