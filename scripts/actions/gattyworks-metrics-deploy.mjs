@@ -34,7 +34,7 @@ const APPROVED_FILES = Object.freeze({
   'dashboard/beacon.js': '7e3e9ccab30d8fe6ab77b49d1118d43f60a4d5ce80d88c01e655853c70c7bf59',
   'dashboard/design.html': 'bcd1c3ebe1d011339998be706654b4629f1e1d519b30a595ebd5e41f60cefca6',
   'dashboard/favicon.svg': '6609d4116febf85df64fd8e77fe8bb457463f79bbf2c2811a1381ea890a495e4',
-  'dashboard/index.html': '7596106db6805cf4feb5046b4f4160a97452deb36cdb6ccd11d24c5f06a8ad31',
+  'dashboard/index.html': '5f37b7caf1c909802489ef3367059851f0deff7cddd4885ba197f286858a9fcf',
   'dashboard/landing.css': '79245c0703997f431d34ee47930feab6360f360c391d0a687bccdb51f86eb609',
   'dashboard/landing.html': 'b4cccef7d3cae614f4bf7bde78b774558ffefed72afbd449eaf67ff8f6bba149',
   'dashboard/landing.js': 'd4de648cefae88b9e5101227d91f73bc13fd76fda936d4341af5feb610f9be58',
