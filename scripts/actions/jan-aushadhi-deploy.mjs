@@ -38,7 +38,7 @@ const SOURCE_FILES = Object.freeze([
 ])
 const EXCLUDED_GENERATED = 'public/data/version.json'
 const APPROVED_SOURCE_COUNT = 150
-const APPROVED_SOURCE_HASH = '5eff7860702caa8421c837f44fbd54ab8c89874cc49e9ba23a53b22281800c6c'
+const APPROVED_SOURCE_HASH = 'b2455ce4a249aa2799376d5869c005602967f783d1e826798aa540d4b09fb5d6'
 
 function fail(message) {
   throw new Error(message)
