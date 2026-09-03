@@ -2,7 +2,7 @@
 /**
  * Guarded action: deploy the GazetteIntel API and app Workers.
  *
- * The source must be a clean checkout of origin/main. The action never seeds
+ * The source must be a clean checkout at the current origin/main commit. The action never seeds
  * the demo corpus. It sends ADMIN_EMAILS to Wrangler on stdin only.
  */
 import { existsSync, readFileSync } from 'node:fs'
@@ -39,12 +39,11 @@ function git(args) {
   return spawnSync('git', ['-C', source, ...args], { encoding: 'utf8' })
 }
 
-const branch = String(git(['branch', '--show-current']).stdout || '').trim()
 const status = String(git(['status', '--porcelain']).stdout || '').trim()
 const head = String(git(['rev-parse', 'HEAD']).stdout || '').trim()
 const main = String(git(['rev-parse', 'origin/main']).stdout || '').trim()
-if (branch !== 'main' || status || !head || head !== main) {
-  log.err('source must be a clean main checkout at the current origin/main commit')
+if (status || !head || head !== main) {
+  log.err('source must be a clean checkout at the current origin/main commit')
   process.exit(1)
 }
 
