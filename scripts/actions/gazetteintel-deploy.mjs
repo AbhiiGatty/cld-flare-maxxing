@@ -11,7 +11,7 @@ import { spawnSync } from 'node:child_process'
 import { DIRS } from '../lib/paths.mjs'
 import { loadEnv } from '../lib/util.mjs'
 import { makeClient, resolveAccountId } from '../lib/cf.mjs'
-import { audit, bootEdit, commandEnv, log, npmExecutable, parseArgs, wranglerExecutable } from './_lib.mjs'
+import { audit, bootEdit, commandEnv, log, parseArgs, wranglerExecutable } from './_lib.mjs'
 
 const action = 'gazetteintel-deploy'
 const { args, commit } = parseArgs(process.argv.slice(2))
@@ -100,12 +100,23 @@ function run(label, command, commandArgs, env, options = {}) {
   return result.stdout || ''
 }
 
+function npmCommand() {
+  if (process.platform !== 'win32') return { command: 'npm', args: [] }
+  const paths = String(process.env.Path || process.env.PATH || '').split(';').filter(Boolean)
+  for (const path of paths) {
+    const cli = join(path, 'node_modules', 'npm', 'bin', 'npm-cli.js')
+    if (existsSync(cli)) return { command: process.execPath, args: [cli] }
+  }
+  throw new Error('npm-cli.js was not found on PATH')
+}
+
 const cf = bootEdit(action, { source, commit: head, database, apiWorker, appWorker, secretNames: ['ADMIN_EMAILS'] })
 const mutationEnv = commandEnv({ CLOUDFLARE_API_TOKEN: cf.token, CLOUDFLARE_ACCOUNT_ID: accountId })
 const wrangler = wranglerExecutable(source)
+const npm = npmCommand()
 
-run('install locked GazetteIntel dependencies', npmExecutable(), ['ci'], commandEnv())
-run('build GazetteIntel static assets', npmExecutable(), ['run', 'build'], commandEnv())
+run('install locked GazetteIntel dependencies', npm.command, [...npm.args, 'ci'], commandEnv())
+run('build GazetteIntel static assets', npm.command, [...npm.args, 'run', 'build'], commandEnv())
 run('apply remote D1 migrations', process.execPath, [wrangler, 'd1', 'migrations', 'apply', database, '--remote', '--config', 'api/wrangler.jsonc'], mutationEnv)
 run('set API admin allowlist', process.execPath, [wrangler, 'secret', 'put', 'ADMIN_EMAILS', '--config', 'api/wrangler.jsonc'], mutationEnv, { input: `${adminEmails}\n`, quiet: true })
 run('deploy API Worker and Custom Domain', process.execPath, [wrangler, 'deploy', '--config', 'api/wrangler.jsonc'], mutationEnv)
