@@ -34,6 +34,9 @@ environment containing the scoped Cloudflare credential instead of the full pare
 | `social-desk-provision.mjs` | create the Social Desk D1 database and exact-email Access application; operator addresses come from `--emails` or local `.env` |
 | `gazetteintel-provision.mjs` | create the fixed GazetteIntel D1, two private R2 buckets, and exact two-host Access application; operators come from `--emails` or local `.env` |
 | `gazetteintel-google-sso.mjs` | install a local Google OAuth web-client JSON as the fixed GazetteIntel Access OIDC provider without logging its secret |
+| `gazetteintel-api-secrets.mjs` | generate and install `JWT_SECRET` and `INGESTION_TOKEN` on the fixed `gazetteintel-api` Worker; the ingestion token is written once to a gitignored VM env file and neither value is logged |
+| `gazetteintel-access-retire.mjs` | delete the fixed two-host `GazetteIntel beta` Access application after the app-owned Google SSO build is on `origin/main` and a live sign-in is attested; the Google identity provider is preserved |
+| `gattyworks-google-idp-rename.mjs` | rename the `GazetteIntel Google` Access identity provider to `GattyWorks Google`, re-sending its OIDC config from the local credential JSON without logging the secret |
 | `social-desk-mcp-access.mjs` | create the path-scoped `/mcp*` Access application and Everyone Bypass policy; the Worker still requires a Social Desk bearer token |
 | `social-desk-deploy.mjs` | apply Social Desk D1 migrations and deploy its Worker and Custom Domain from the standalone or former nested repo; `--migrations-only` stops before Worker deploy |
 | `social-desk-meta-secrets.mjs` | install the four Social Desk Meta values as encrypted Worker secrets without logging their values |

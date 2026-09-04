@@ -49,6 +49,9 @@ test('dry runs finish before loading the edit token', async () => {
     'dpdpa-landing-deploy.mjs',
     'dpdpa-metrics-smoke-cleanup.mjs',
     'gattyworks-metrics-deploy.mjs',
+    'gattyworks-google-idp-rename.mjs',
+    'gazetteintel-access-retire.mjs',
+    'gazetteintel-api-secrets.mjs',
     'jan-aushadhi-metrics-onboard.mjs',
     'jan-aushadhi-phone-migration.mjs',
     'jan-aushadhi-turnstile-provision.mjs',
@@ -357,3 +360,25 @@ test('Social Desk actions require resource names instead of publishing account d
   assert.match(deploy, /String\(args\.domain \|\| ''\)/)
   assert.match(secrets, /String\(args\.worker \|\| ''\)/)
 })
+
+test('GazetteIntel API secrets action never logs secret values and writes only the ingestion token to disk', async () => {
+  const source = await readFile(new URL('gazetteintel-api-secrets.mjs', actionsDir), 'utf8')
+  assert.match(source, /const worker = 'gazetteintel-api'/)
+  assert.match(source, /randomBytes\(32\)\.toString\('base64url'\)/)
+  assert.match(source, /type: 'secret_text'/)
+  assert.match(source, /GAZETTEINTEL_INGESTION_TOKEN=\$\{values\.INGESTION_TOKEN\}/)
+  assert.doesNotMatch(source, /JWT_SECRET=\$\{/)
+  assert.doesNotMatch(source, /log\.(info|ok|warn|err)\([^\n]*values\[/)
+  assert.doesNotMatch(source, /audit\([^\n]*values/)
+})
+
+test('GazetteIntel Access retirement is fixed to the two-host beta app and preserves the identity provider', async () => {
+  const source = await readFile(new URL('gazetteintel-access-retire.mjs', actionsDir), 'utf8')
+  assert.match(source, /const appName = 'GazetteIntel beta'/)
+  assert.match(source, /const hosts = \['app\.gazetteintel\.com', 'api\.gazetteintel\.com'\]/)
+  assert.match(source, /refusing to change Access without it/)
+  assert.match(source, /google-signin-verified/)
+  assert.match(source, /cf\.raw\('DELETE', `\/accounts\/\$\{accountId\}\/access\/apps\/\$\{app\.id\}`\)/)
+  assert.doesNotMatch(source, /identity_providers\/\$\{[^}]+\}`/, 'must not mutate identity providers')
+})
+
