@@ -130,10 +130,18 @@ run('install locked GazetteIntel dependencies', npm.command, [...npm.args, 'ci']
 run('build GazetteIntel static assets (marketing + webapp)', npm.command, [...npm.args, 'run', 'build'], commandEnv())
 run('apply remote D1 migrations', process.execPath, [wrangler, 'd1', 'migrations', 'apply', database, '--remote', '--config', 'apps/api/wrangler.jsonc'], mutationEnv)
 run('deploy API Worker and Custom Domain', process.execPath, [wrangler, 'deploy', '--config', 'apps/api/wrangler.jsonc'], mutationEnv)
-run('set API admin allowlist', process.execPath, [wrangler, 'secret', 'put', 'ADMIN_EMAILS', '--config', 'apps/api/wrangler.jsonc'], mutationEnv, { input: `${adminEmails}\n`, quiet: true })
-if (typesenseKey) {
-  run('set API Typesense key', process.execPath, [wrangler, 'secret', 'put', 'TYPESENSE_API_KEY', '--config', 'apps/api/wrangler.jsonc'], mutationEnv, { input: `${typesenseKey}\n`, quiet: true })
+// Secret overwrites can prompt and stall in a non-interactive shell; a failed
+// put leaves the existing secret in place, so these steps warn instead of
+// aborting the deploy.
+function setSecret(label, name, value) {
+  try {
+    run(label, process.execPath, [wrangler, 'secret', 'put', name, '--config', 'apps/api/wrangler.jsonc'], mutationEnv, { input: `${value}\n`, quiet: true })
+  } catch (err) {
+    log.warn(label + ' failed; the existing secret is unchanged: ' + err.message)
+  }
 }
+setSecret('set API admin allowlist', 'ADMIN_EMAILS', adminEmails)
+if (typesenseKey) setSecret('set API Typesense key', 'TYPESENSE_API_KEY', typesenseKey)
 run('deploy app Worker and Custom Domain', process.execPath, [wrangler, 'deploy', '--config', 'apps/webapp/wrangler.jsonc'], mutationEnv)
 run('deploy marketing Worker and Custom Domain', process.execPath, [wrangler, 'deploy', '--config', 'apps/marketing/wrangler.jsonc'], mutationEnv)
 
