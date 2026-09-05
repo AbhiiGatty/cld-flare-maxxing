@@ -77,6 +77,8 @@ log.info(`API Worker: ${apiWorker} (${serviceNames.has(apiWorker) ? 'update' : '
 log.info(`App Worker: ${appWorker} (${serviceNames.has(appWorker) ? 'update' : 'create'}) at app.gazetteintel.com`)
 log.info(`Marketing Worker: ${marketingWorker} (${serviceNames.has(marketingWorker) ? 'update' : 'create'}) at gazetteintel.com`)
 log.info('Worker secret: ADMIN_EMAILS (read from the local environment; value is never printed or audited)')
+log.info('Worker secret: TYPESENSE_API_KEY (set when GAZETTEINTEL_TYPESENSE_API_KEY is present; value is never printed or audited)')
+log.info('Worker secret: TYPESENSE_API_KEY (set when GAZETTEINTEL_TYPESENSE_API_KEY is present; value is never printed or audited)')
 log.info('The demo SQL corpus is intentionally not applied to production.')
 
 if (!commit) {
@@ -86,6 +88,7 @@ if (!commit) {
 }
 
 const adminEmails = String(process.env.GAZETTEINTEL_ADMIN_EMAILS || '').trim().toLowerCase()
+const typesenseKey = String(process.env.GAZETTEINTEL_TYPESENSE_API_KEY || '').trim()
 if (!/^[^\s@]+@[^\s@]+\.[^\s@]+(?:,[^\s@]+@[^\s@]+\.[^\s@]+)*$/.test(adminEmails)) {
   log.err('GAZETTEINTEL_ADMIN_EMAILS must contain one or more comma-separated email addresses')
   process.exit(1)
@@ -118,7 +121,7 @@ function npmCommand() {
   throw new Error('npm-cli.js was not found on PATH')
 }
 
-const cf = bootEdit(action, { source, commit: head, database, apiWorker, appWorker, marketingWorker, secretNames: ['ADMIN_EMAILS'] })
+const cf = bootEdit(action, { source, commit: head, database, apiWorker, appWorker, marketingWorker, secretNames: ['ADMIN_EMAILS', 'TYPESENSE_API_KEY'] })
 const mutationEnv = commandEnv({ CLOUDFLARE_API_TOKEN: cf.token, CLOUDFLARE_ACCOUNT_ID: accountId })
 const wrangler = wranglerExecutable(source)
 const npm = npmCommand()
@@ -128,6 +131,9 @@ run('build GazetteIntel static assets (marketing + webapp)', npm.command, [...np
 run('apply remote D1 migrations', process.execPath, [wrangler, 'd1', 'migrations', 'apply', database, '--remote', '--config', 'apps/api/wrangler.jsonc'], mutationEnv)
 run('deploy API Worker and Custom Domain', process.execPath, [wrangler, 'deploy', '--config', 'apps/api/wrangler.jsonc'], mutationEnv)
 run('set API admin allowlist', process.execPath, [wrangler, 'secret', 'put', 'ADMIN_EMAILS', '--config', 'apps/api/wrangler.jsonc'], mutationEnv, { input: `${adminEmails}\n`, quiet: true })
+if (typesenseKey) {
+  run('set API Typesense key', process.execPath, [wrangler, 'secret', 'put', 'TYPESENSE_API_KEY', '--config', 'apps/api/wrangler.jsonc'], mutationEnv, { input: `${typesenseKey}\n`, quiet: true })
+}
 run('deploy app Worker and Custom Domain', process.execPath, [wrangler, 'deploy', '--config', 'apps/webapp/wrangler.jsonc'], mutationEnv)
 run('deploy marketing Worker and Custom Domain', process.execPath, [wrangler, 'deploy', '--config', 'apps/marketing/wrangler.jsonc'], mutationEnv)
 
