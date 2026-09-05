@@ -1,9 +1,12 @@
 #!/usr/bin/env node
 /**
- * Guarded action: deploy the GazetteIntel API and app Workers.
+ * Guarded action: deploy the GazetteIntel API, app, and marketing Workers.
  *
- * The source must be a clean checkout at the current origin/main commit. The action never seeds
- * the demo corpus. It sends ADMIN_EMAILS to Wrangler on stdin only.
+ * GazetteIntel is an npm-workspace monorepo: apps/api (gazetteintel-api),
+ * apps/webapp (gazetteintel-app), apps/marketing (gazetteintel, apex host).
+ * The source must be a clean checkout at the current origin/main commit. The
+ * action never seeds the demo corpus. It sends ADMIN_EMAILS to Wrangler on
+ * stdin only.
  */
 import { existsSync, readFileSync } from 'node:fs'
 import { isAbsolute, join, resolve } from 'node:path'
@@ -18,6 +21,7 @@ const { args, commit } = parseArgs(process.argv.slice(2))
 const sourceInput = String(args.source || '')
 const apiWorker = 'gazetteintel-api'
 const appWorker = 'gazetteintel-app'
+const marketingWorker = 'gazetteintel'
 const database = 'gazette-ledger'
 
 if (!sourceInput || !isAbsolute(sourceInput)) {
@@ -27,8 +31,9 @@ if (!sourceInput || !isAbsolute(sourceInput)) {
 
 const source = resolve(sourceInput)
 const files = [
-  'package.json', 'package-lock.json', 'api/wrangler.jsonc',
-  'app-worker/wrangler.jsonc', 'app-worker/index.ts',
+  'package.json', 'package-lock.json', 'apps/api/wrangler.jsonc',
+  'apps/marketing/wrangler.jsonc', 'apps/webapp/wrangler.jsonc',
+  'apps/webapp/index.ts',
 ]
 if (files.some((file) => !existsSync(join(source, file)))) {
   log.err('source is missing the committed GazetteIntel API or app Worker files')
@@ -47,11 +52,13 @@ if (status || !head || head !== main) {
   process.exit(1)
 }
 
-const apiConfig = readFileSync(join(source, 'api/wrangler.jsonc'), 'utf8')
-const appConfig = readFileSync(join(source, 'app-worker/wrangler.jsonc'), 'utf8')
+const apiConfig = readFileSync(join(source, 'apps/api/wrangler.jsonc'), 'utf8')
+const appConfig = readFileSync(join(source, 'apps/webapp/wrangler.jsonc'), 'utf8')
+const marketingConfig = readFileSync(join(source, 'apps/marketing/wrangler.jsonc'), 'utf8')
 if (
   !apiConfig.includes(apiWorker) || !apiConfig.includes(database) || !apiConfig.includes('api.gazetteintel.com')
   || !appConfig.includes(appWorker) || !appConfig.includes('app.gazetteintel.com')
+  || !marketingConfig.includes(marketingWorker) || !marketingConfig.includes('assets')
 ) {
   log.err('the Worker configuration does not match the fixed GazetteIntel production resources')
   process.exit(1)
@@ -68,12 +75,13 @@ log.info(`commit: ${head.slice(0, 7)}`)
 log.info(`D1 migrations: apply pending migrations to ${database}`)
 log.info(`API Worker: ${apiWorker} (${serviceNames.has(apiWorker) ? 'update' : 'create'}) at api.gazetteintel.com`)
 log.info(`App Worker: ${appWorker} (${serviceNames.has(appWorker) ? 'update' : 'create'}) at app.gazetteintel.com`)
+log.info(`Marketing Worker: ${marketingWorker} (${serviceNames.has(marketingWorker) ? 'update' : 'create'}) at gazetteintel.com`)
 log.info('Worker secret: ADMIN_EMAILS (read from the local environment; value is never printed or audited)')
 log.info('The demo SQL corpus is intentionally not applied to production.')
 
 if (!commit) {
   log.warn('DRY-RUN - nothing changed. Re-run with --commit to apply.')
-  audit({ action, status: 'DRY_RUN', source, commit: head, database, apiWorker, appWorker })
+  audit({ action, status: 'DRY_RUN', source, commit: head, database, apiWorker, appWorker, marketingWorker })
   process.exit(0)
 }
 
@@ -110,21 +118,22 @@ function npmCommand() {
   throw new Error('npm-cli.js was not found on PATH')
 }
 
-const cf = bootEdit(action, { source, commit: head, database, apiWorker, appWorker, secretNames: ['ADMIN_EMAILS'] })
+const cf = bootEdit(action, { source, commit: head, database, apiWorker, appWorker, marketingWorker, secretNames: ['ADMIN_EMAILS'] })
 const mutationEnv = commandEnv({ CLOUDFLARE_API_TOKEN: cf.token, CLOUDFLARE_ACCOUNT_ID: accountId })
 const wrangler = wranglerExecutable(source)
 const npm = npmCommand()
 
 run('install locked GazetteIntel dependencies', npm.command, [...npm.args, 'ci'], commandEnv())
-run('build GazetteIntel static assets', npm.command, [...npm.args, 'run', 'build'], commandEnv())
-run('apply remote D1 migrations', process.execPath, [wrangler, 'd1', 'migrations', 'apply', database, '--remote', '--config', 'api/wrangler.jsonc'], mutationEnv)
-run('deploy API Worker and Custom Domain', process.execPath, [wrangler, 'deploy', '--config', 'api/wrangler.jsonc'], mutationEnv)
-run('set API admin allowlist', process.execPath, [wrangler, 'secret', 'put', 'ADMIN_EMAILS', '--config', 'api/wrangler.jsonc'], mutationEnv, { input: `${adminEmails}\n`, quiet: true })
-run('deploy app Worker and Custom Domain', process.execPath, [wrangler, 'deploy', '--config', 'app-worker/wrangler.jsonc'], mutationEnv)
+run('build GazetteIntel static assets (marketing + webapp)', npm.command, [...npm.args, 'run', 'build'], commandEnv())
+run('apply remote D1 migrations', process.execPath, [wrangler, 'd1', 'migrations', 'apply', database, '--remote', '--config', 'apps/api/wrangler.jsonc'], mutationEnv)
+run('deploy API Worker and Custom Domain', process.execPath, [wrangler, 'deploy', '--config', 'apps/api/wrangler.jsonc'], mutationEnv)
+run('set API admin allowlist', process.execPath, [wrangler, 'secret', 'put', 'ADMIN_EMAILS', '--config', 'apps/api/wrangler.jsonc'], mutationEnv, { input: `${adminEmails}\n`, quiet: true })
+run('deploy app Worker and Custom Domain', process.execPath, [wrangler, 'deploy', '--config', 'apps/webapp/wrangler.jsonc'], mutationEnv)
+run('deploy marketing Worker and Custom Domain', process.execPath, [wrangler, 'deploy', '--config', 'apps/marketing/wrangler.jsonc'], mutationEnv)
 
 const afterServices = await read.getAll(`/accounts/${accountId}/workers/services`, { query: { per_page: 100 } })
 const afterNames = new Set(afterServices.map((service) => String(service.id || service.default_environment?.script?.name || '')))
-if (!afterNames.has(apiWorker) || !afterNames.has(appWorker)) throw new Error('Worker service verification failed')
+if (!afterNames.has(apiWorker) || !afterNames.has(appWorker) || !afterNames.has(marketingWorker)) throw new Error('Worker service verification failed')
 
-audit({ action, status: 'COMMITTED', source, commit: head, database, apiWorker, appWorker, step: 'verified' })
-log.ok('GazetteIntel API and app Workers deployed. DNS and TLS can take several minutes to propagate.')
+audit({ action, status: 'COMMITTED', source, commit: head, database, apiWorker, appWorker, marketingWorker, step: 'verified' })
+log.ok('GazetteIntel API, app, and marketing Workers deployed. DNS and TLS can take several minutes to propagate.')
