@@ -1,6 +1,25 @@
 {
-  "latest": "2026-08-04T03-44-24Z",
+  "latest": "2026-09-12T07-53-42Z",
   "runs": [
+    {
+      "stamp": "2026-09-12T07-53-42Z",
+      "generatedAt": "2026-09-12T07:53:55.398Z",
+      "counts": {
+        "zones": 6,
+        "dnsRecords": 62,
+        "workers": 19,
+        "kv": 3,
+        "r2": 5,
+        "d1": 7,
+        "queues": 4,
+        "pages": 5,
+        "zeroTrustSeats": 3,
+        "members": 1,
+        "tokens": 0,
+        "auditEntries": 3000,
+        "errors": 27
+      }
+    },
     {
       "stamp": "2026-08-04T03-44-24Z",
       "generatedAt": "2026-08-04T03:45:05.879Z",
