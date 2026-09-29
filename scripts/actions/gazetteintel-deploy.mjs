@@ -76,7 +76,7 @@ log.info(`D1 migrations: apply pending migrations to ${database}`)
 log.info(`API Worker: ${apiWorker} (${serviceNames.has(apiWorker) ? 'update' : 'create'}) at api.gazetteintel.com`)
 log.info(`App Worker: ${appWorker} (${serviceNames.has(appWorker) ? 'update' : 'create'}) at app.gazetteintel.com`)
 log.info(`Marketing Worker: ${marketingWorker} (${serviceNames.has(marketingWorker) ? 'update' : 'create'}) at gazetteintel.com`)
-log.info('Worker secret: ADMIN_EMAILS (read from the local environment; value is never printed or audited)')
+log.info('Worker secret: ADMIN_EMAILS (update only when a local value is supplied; otherwise preserve the existing secret)')
 log.info('Worker secret: TYPESENSE_API_KEY (set when GAZETTEINTEL_TYPESENSE_API_KEY is present; value is never printed or audited)')
 log.info('Worker secret: TYPESENSE_API_KEY (set when GAZETTEINTEL_TYPESENSE_API_KEY is present; value is never printed or audited)')
 log.info('The demo SQL corpus is intentionally not applied to production.')
@@ -89,9 +89,17 @@ if (!commit) {
 
 const adminEmails = String(process.env.GAZETTEINTEL_ADMIN_EMAILS || '').trim().toLowerCase()
 const typesenseKey = String(process.env.GAZETTEINTEL_TYPESENSE_API_KEY || '').trim()
-if (!/^[^\s@]+@[^\s@]+\.[^\s@]+(?:,[^\s@]+@[^\s@]+\.[^\s@]+)*$/.test(adminEmails)) {
+if (adminEmails && !/^[^\s@]+@[^\s@]+\.[^\s@]+(?:,[^\s@]+@[^\s@]+\.[^\s@]+)*$/.test(adminEmails)) {
   log.err('GAZETTEINTEL_ADMIN_EMAILS must contain one or more comma-separated email addresses')
   process.exit(1)
+}
+if (!adminEmails) {
+  const existingSecrets = await read.get(`/accounts/${accountId}/workers/scripts/${apiWorker}/secrets`)
+  if (!existingSecrets.some((secret) => secret.name === 'ADMIN_EMAILS')) {
+    log.err('ADMIN_EMAILS is neither configured locally nor present on the API Worker')
+    process.exit(1)
+  }
+  log.info('preserving existing API admin allowlist')
 }
 
 function run(label, command, commandArgs, env, options = {}) {
@@ -140,7 +148,7 @@ function setSecret(label, name, value) {
     log.warn(label + ' failed; the existing secret is unchanged: ' + err.message)
   }
 }
-setSecret('set API admin allowlist', 'ADMIN_EMAILS', adminEmails)
+if (adminEmails) setSecret('set API admin allowlist', 'ADMIN_EMAILS', adminEmails)
 if (typesenseKey) setSecret('set API Typesense key', 'TYPESENSE_API_KEY', typesenseKey)
 run('deploy app Worker and Custom Domain', process.execPath, [wrangler, 'deploy', '--config', 'apps/webapp/wrangler.jsonc'], mutationEnv)
 run('deploy marketing Worker and Custom Domain', process.execPath, [wrangler, 'deploy', '--config', 'apps/marketing/wrangler.jsonc'], mutationEnv)
