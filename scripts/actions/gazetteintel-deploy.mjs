@@ -131,10 +131,10 @@ function npmCommand() {
 
 const cf = bootEdit(action, { source, commit: head, database, apiWorker, appWorker, marketingWorker, secretNames: ['ADMIN_EMAILS', 'TYPESENSE_API_KEY'] })
 const mutationEnv = commandEnv({ CLOUDFLARE_API_TOKEN: cf.token, CLOUDFLARE_ACCOUNT_ID: accountId })
-const wrangler = wranglerExecutable(source)
 const npm = npmCommand()
 
 run('install locked GazetteIntel dependencies', npm.command, [...npm.args, 'ci'], commandEnv())
+const wrangler = wranglerExecutable(source)
 run('build GazetteIntel static assets (marketing + webapp)', npm.command, [...npm.args, 'run', 'build'], commandEnv())
 run('apply remote D1 migrations', process.execPath, [wrangler, 'd1', 'migrations', 'apply', database, '--remote', '--config', 'apps/api/wrangler.jsonc'], mutationEnv)
 run('deploy API Worker and Custom Domain', process.execPath, [wrangler, 'deploy', '--config', 'apps/api/wrangler.jsonc'], mutationEnv)
