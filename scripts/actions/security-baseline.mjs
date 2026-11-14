@@ -10,7 +10,7 @@
  * DRY-RUN by default — reads current state with the READ token, changes nothing,
  * needs no break-glass. Only --commit arms break-glass and mutates.
  *
- * Flags: [--zone=<name|id>] [--only=ssl,min_tls,security_level,hsts,dnssec] [--commit]
+ * Flags: [--zone=<name|id>] [--only=ssl,min_tls,always_https,security_level,hsts,dnssec] [--commit]
  *
  *   node scripts/actions/security-baseline.mjs                 # dry-run, all zones
  *   CF_ALLOW_DESTRUCTIVE=YES_I_AM_SURE node scripts/actions/security-baseline.mjs --commit
@@ -46,6 +46,9 @@ for (const z of zones) {
     changes.push({ kind: 'setting', id: 'ssl', from: set.ssl, to: 'strict', value: 'strict' })
   if (want('min_tls') && (TLS_RANK[set.min_tls_version] ?? 0) < 2)
     changes.push({ kind: 'setting', id: 'min_tls_version', from: set.min_tls_version, to: '1.2', value: '1.2' })
+  // Redirects require an explicit selection after checking HTTP clients.
+  if (only?.includes('always_https') && set.always_use_https === 'off')
+    changes.push({ kind: 'setting', id: 'always_use_https', from: 'off', to: 'on', value: 'on' })
   if (want('security_level') && ['off', 'essentially_off'].includes(set.security_level))
     changes.push({ kind: 'setting', id: 'security_level', from: set.security_level, to: 'medium', value: 'medium' })
   if (want('hsts')) {
